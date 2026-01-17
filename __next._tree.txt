@@ -1,3 +1,3 @@
-:HL["/MacroMap.github.io/_next/static/chunks/d18493100b4348ca.css","style"]
+:HL["/MacroMap.github.io/_next/static/chunks/f6d131a664e2e0ea.css","style"]
 :HL["https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap","style"]
-0:{"buildId":"V2iHseLfkDEUctiVRFZkv","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
+0:{"buildId":"bkLQxIWUATgZ6mGYABlSB","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
