@@ -9,6 +9,7 @@ import NearbyRestaurants from "./NearbyRestaurants";
 
 interface MealBuilderProps {
     onBack: () => void;
+    onLogMeal: (calories: number, items: FoodItem[]) => void;
 }
 
 type Tab = "search" | "restaurant" | "nearby" | "custom" | "scan";
@@ -267,7 +268,7 @@ function CustomFoodModal({ food, onAdd, onClose }: { food: WholeFood; onAdd: (fo
     );
 }
 
-export default function MealBuilder({ onBack }: MealBuilderProps) {
+export default function MealBuilder({ onBack, onLogMeal }: MealBuilderProps) {
     const [foods, setFoods] = useState<FoodItem[]>([]);
     const [activeTab, setActiveTab] = useState<Tab>("search");
     const [searchQuery, setSearchQuery] = useState("");
@@ -278,6 +279,12 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [barcode, setBarcode] = useState("");
     const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+
+    const handleFinish = () => {
+        if (foods.length === 0) return;
+
+        onLogMeal(totals.calories, foods);
+    };
 
     const totals: MacroTotals = foods.reduce(
         (acc, food) => ({
@@ -343,8 +350,8 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
     return (
         <div className="container safe-top safe-bottom py-6 max-w-lg mx-auto space-y-4">
             {/* Header */}
-            <div className="flex items-center gap-3">
-                <button onClick={onBack} className="p-2 bg-gray-100 rounded-xl text-gray-600 hover:bg-gray-200">
+            <div className="flex items-center justify-center relative py-2">
+                <button onClick={onBack} className="absolute left-0 p-2 bg-gray-100 rounded-xl text-gray-600 hover:bg-gray-200">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
@@ -514,7 +521,22 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
             {selectedRestaurant && <RestaurantMenuModal restaurant={selectedRestaurant} onAdd={handleAddMenuItem} onClose={() => setSelectedRestaurant(null)} />}
             {selectedWholeFood && <CustomFoodModal food={selectedWholeFood} onAdd={(food) => { setFoods((prev) => [...prev, food]); setSelectedWholeFood(null); }} onClose={() => setSelectedWholeFood(null)} />}
 
-            <p className="text-xs text-center text-gray-500 pt-4">Data: Open Food Facts • {RESTAURANTS.length} Restaurants • {WHOLE_FOODS.length}+ Whole Foods</p>
+            <p className="text-xs text-center text-gray-500 pt-4 pb-24">Data: Open Food Facts • {RESTAURANTS.length} Restaurants • {WHOLE_FOODS.length}+ Whole Foods</p>
+
+            {/* Sticky Bottom Log Button */}
+            {foods.length > 0 && (
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 animate-in slide-in-from-bottom duration-300">
+                    <div className="max-w-lg mx-auto">
+                        <button
+                            onClick={handleFinish}
+                            className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-emerald-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                        >
+                            <span>Log Meal</span>
+                            <span className="bg-emerald-600 px-2 py-0.5 rounded-lg text-sm">{Math.round(totals.calories)} cal</span>
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

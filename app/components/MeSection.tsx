@@ -1,4 +1,18 @@
-export default function MeSection() {
+interface MeSectionProps {
+    budget: number;
+    setBudget: (budget: number) => void;
+    trackingMode: "budget" | "tracking";
+    setTrackingMode: (mode: "budget" | "tracking") => void;
+}
+
+export default function MeSection({ budget, setBudget, trackingMode, setTrackingMode }: MeSectionProps) {
+    const handleGoalClick = () => {
+        const newGoal = prompt("Enter your daily calorie goal:", budget.toString());
+        if (newGoal && !isNaN(Number(newGoal))) {
+            setBudget(Number(newGoal));
+        }
+    };
+
     return (
         <div className="pb-24 animate-in fade-in duration-500">
             {/* Header */}
@@ -36,10 +50,33 @@ export default function MeSection() {
                 </div>
 
                 {/* Settings List */}
-                <div className="space-y-2">
+                <div className="space-y-3">
                     <h3 className="font-semibold text-gray-700 ml-1">Settings</h3>
+
+                    {/* Goal Setting */}
+                    <button onClick={handleGoalClick} className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors">
+                        <span className="text-xl">🎯</span>
+                        <span className="flex-1 text-left font-medium text-gray-800">My Daily Goal</span>
+                        <span className="text-emerald-500 font-bold">{budget} kcal</span>
+                        <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+
+                    {/* Mode Toggle */}
+                    <button
+                        onClick={() => setTrackingMode(trackingMode === "budget" ? "tracking" : "budget")}
+                        className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors"
+                    >
+                        <span className="text-xl">📊</span>
+                        <div className="flex-1 text-left">
+                            <span className="block font-medium text-gray-800">Tracking Mode</span>
+                            <span className="text-xs text-gray-400">{trackingMode === "budget" ? "Strict Budget Limit" : "Count Only (No Limit)"}</span>
+                        </div>
+                        <div className={`w-12 h-6 rounded-full p-1 transition-colors ${trackingMode === "tracking" ? "bg-emerald-500" : "bg-gray-200"}`}>
+                            <div className={`w-4 h-4 rounded-full bg-white shadow-sm transform transition-transform ${trackingMode === "tracking" ? "translate-x-6" : ""}`} />
+                        </div>
+                    </button>
+
                     {[
-                        { icon: "🎯", label: "My Goals", val: "2,000 kcal" },
                         { icon: "🍎", label: "Diet Preferences", val: "None" },
                         { icon: "🔔", label: "Notifications", val: "On" },
                         { icon: "🔒", label: "Privacy", val: "" },
