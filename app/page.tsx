@@ -396,12 +396,12 @@ export default function Home() {
 
       {/* Water Tracker */}
       <div className="px-4">
-        <div className="bg-blue-500 rounded-3xl p-6 text-white shadow-lg shadow-blue-500/20 flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-lg mb-1">Water</h3>
-            <p className="text-blue-100 text-sm">Goal: {waterGoal} {waterUnit}</p>
+        <div className="bg-blue-500 rounded-3xl p-8 text-white shadow-lg shadow-blue-500/20 flex items-center justify-between">
+          <div className="flex-1">
+            <h3 className="font-bold text-lg mb-1 ml-2">Water</h3>
+            <p className="text-blue-100 text-sm ml-2">Goal: {waterGoal} {waterUnit}</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 mr-2">
             <button
               onClick={() => updateHistory("water", waterUnit === "liters" ? -0.1 : -1)}
               className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30"

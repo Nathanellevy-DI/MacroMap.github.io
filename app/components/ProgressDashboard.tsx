@@ -18,39 +18,39 @@ export default function ProgressDashboard({ progress }: ProgressDashboardProps) 
     return (
         <div className="space-y-4">
             {/* Level Progress */}
-            <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg">
-                <div className="flex items-center justify-between mb-3">
+            <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-3xl p-8 text-white shadow-lg">
+                <div className="flex items-center justify-between mb-3 px-2">
                     <h3 className="text-lg font-bold">Level {progress.level} 🌟</h3>
                     <span className="text-sm opacity-90">{current}/{needed} XP</span>
                 </div>
-                <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden">
+                <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden mx-2">
                     <div
                         className="h-full bg-white rounded-full transition-all duration-500"
                         style={{ width: `${xpPercentage}%` }}
                     />
                 </div>
-                <p className="text-xs mt-2 opacity-75">{needed - current} XP until Level {progress.level + 1}</p>
+                <p className="text-xs mt-2 opacity-75 px-2">{needed - current} XP until Level {progress.level + 1}</p>
             </div>
 
             {/* Stats Grid */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                <h3 className="font-bold text-gray-800 mb-4">Your Progress</h3>
+                <h3 className="font-bold text-gray-800 mb-4 px-2">Your Progress</h3>
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-4">
-                        <div className="text-3xl font-bold text-orange-600">{progress.currentStreak}</div>
-                        <div className="text-xs text-gray-600 mt-1">🔥 Current Streak</div>
+                    <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-5">
+                        <div className="text-3xl font-bold text-orange-600 ml-1">{progress.currentStreak}</div>
+                        <div className="text-xs text-gray-600 mt-1 ml-1">🔥 Current Streak</div>
                     </div>
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4">
-                        <div className="text-3xl font-bold text-emerald-600">{progress.longestStreak}</div>
-                        <div className="text-xs text-gray-600 mt-1">🏆 Best Streak</div>
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5">
+                        <div className="text-3xl font-bold text-emerald-600 ml-1">{progress.longestStreak}</div>
+                        <div className="text-xs text-gray-600 mt-1 ml-1">🏆 Best Streak</div>
                     </div>
-                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-4">
-                        <div className="text-3xl font-bold text-blue-600">{progress.totalMeals}</div>
-                        <div className="text-xs text-gray-600 mt-1">⭐ Total Meals</div>
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-5">
+                        <div className="text-3xl font-bold text-blue-600 ml-1">{progress.totalMeals}</div>
+                        <div className="text-xs text-gray-600 mt-1 ml-1">⭐ Total Meals</div>
                     </div>
-                    <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-4">
-                        <div className="text-3xl font-bold text-violet-600">{Math.round((progress.totalWater / 8) * 100)}%</div>
-                        <div className="text-xs text-gray-600 mt-1">💧 Hydration</div>
+                    <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-5">
+                        <div className="text-3xl font-bold text-violet-600 ml-1">{Math.round((progress.totalWater / 8) * 100)}%</div>
+                        <div className="text-xs text-gray-600 mt-1 ml-1">💧 Hydration</div>
                     </div>
                 </div>
             </div>
