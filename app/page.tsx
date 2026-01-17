@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Scanner from "./components/Scanner";
 import Results from "./components/Results";
 import MealBuilder from "./components/MealBuilder";
 import { analyzeIngredients } from "./lib/ingredients-db";
-import { ThemeProvider, useTheme } from "./context/ThemeContext";
 
 type AppMode = "home" | "scanner" | "results" | "meal-builder";
+type Theme = "dark" | "light";
 
 interface AnalysisResult {
   score: number;
@@ -20,32 +20,28 @@ interface AnalysisResult {
   allIngredients: string[];
 }
 
-function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
-
-  return (
-    <button
-      onClick={toggleTheme}
-      className="icon-btn"
-      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-    >
-      {theme === 'dark' ? (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ) : (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
-      )}
-    </button>
-  );
-}
-
-function AppContent() {
+export default function Home() {
   const [mode, setMode] = useState<AppMode>("home");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [theme, setTheme] = useState<Theme>("dark");
+  const [mounted, setMounted] = useState(false);
+
+  // Handle theme
+  useEffect(() => {
+    setMounted(true);
+    const stored = localStorage.getItem("macromap-theme") as Theme;
+    if (stored) setTheme(stored);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem("macromap-theme", theme);
+    }
+  }, [theme, mounted]);
+
+  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   const handleAnalyze = (text: string) => {
     setIsLoading(true);
@@ -65,6 +61,15 @@ function AppContent() {
     setResult(null);
     setMode("home");
   };
+
+  // Prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="spinner" />
+      </main>
+    );
+  }
 
   // Meal Builder
   if (mode === "meal-builder") {
@@ -96,17 +101,31 @@ function AppContent() {
       <header className="max-w-lg mx-auto mb-8 fade-in">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <img
-              src="/MacroMap.github.io/icon-192.png"
-              alt="MacroMap"
-              className="w-12 h-12 rounded-2xl shadow-lg"
-            />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
             <div>
               <h1 className="text-xl font-bold gradient-text">MacroMap</h1>
               <p className="text-xs text-gray-500">Food Intelligence</p>
             </div>
           </div>
-          <ThemeToggle />
+          <button
+            onClick={toggleTheme}
+            className="icon-btn"
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
+            {theme === "dark" ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </button>
         </div>
       </header>
 
@@ -131,7 +150,7 @@ function AppContent() {
               <div className="flex flex-wrap gap-2">
                 <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400">🔍 Search</span>
                 <span className="text-xs px-2 py-1 rounded-full bg-amber-500/15 text-amber-400">🍔 Restaurants</span>
-                <span className="text-xs px-2 py-1 rounded-full bg-blue-500/15 text-blue-400">🥩 Whole Foods</span>
+                <span className="text-xs px-2 py-1 rounded-full bg-blue-500/15 text-blue-400">🥩 Custom</span>
               </div>
             </div>
             <svg className="w-5 h-5 text-gray-500 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,13 +235,5 @@ function AppContent() {
         <p>No API key needed • Open Food Facts</p>
       </footer>
     </main>
-  );
-}
-
-export default function Home() {
-  return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
   );
 }
