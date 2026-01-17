@@ -36,8 +36,8 @@ export default function Scanner({ onCapture, isLoading }: ScannerProps) {
     };
 
     return (
-        <div className="flex flex-col items-center gap-6">
-            <div className="camera-container">
+        <div className="flex flex-col items-center gap-8">
+            <div className="camera-container gradient-border">
                 {preview ? (
                     <img
                         src={preview}
@@ -45,10 +45,10 @@ export default function Scanner({ onCapture, isLoading }: ScannerProps) {
                         className="w-full h-full object-cover"
                     />
                 ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-6 text-center">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center">
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8 text-center">
+                        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-emerald-500/20 to-indigo-500/20 flex items-center justify-center float">
                             <svg
-                                className="w-10 h-10 text-emerald-500"
+                                className="w-12 h-12 text-emerald-400"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -56,28 +56,36 @@ export default function Scanner({ onCapture, isLoading }: ScannerProps) {
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
-                                    strokeWidth={2}
+                                    strokeWidth={1.5}
                                     d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
                                 />
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
-                                    strokeWidth={2}
+                                    strokeWidth={1.5}
                                     d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                                 />
                             </svg>
                         </div>
-                        <p className="text-gray-400 text-sm">
-                            Tap to scan an ingredient label
-                        </p>
+                        <div>
+                            <p className="text-gray-300 font-medium mb-1">
+                                Tap to scan a label
+                            </p>
+                            <p className="text-gray-500 text-sm">
+                                Point at the ingredient list
+                            </p>
+                        </div>
                     </div>
                 )}
 
                 {isLoading && (
-                    <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-4">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
                         <div className="spinner"></div>
-                        <p className="text-emerald-400 font-medium">Analyzing ingredients...</p>
-                        <div className="absolute left-0 right-0 h-1 bg-emerald-500/50 scan-line"></div>
+                        <div className="text-center">
+                            <p className="text-emerald-400 font-semibold">Analyzing...</p>
+                            <p className="text-gray-500 text-sm">Checking for banned ingredients</p>
+                        </div>
+                        <div className="scan-line"></div>
                     </div>
                 )}
 
@@ -103,18 +111,17 @@ export default function Scanner({ onCapture, isLoading }: ScannerProps) {
                         <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            strokeWidth={2}
+                            strokeWidth={2.5}
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                         />
                     </svg>
-                    Scan Label
+                    Scan Ingredients
                 </button>
             ) : (
                 <button
                     onClick={handleReset}
                     disabled={isLoading}
-                    className="btn-primary"
-                    style={{ background: "linear-gradient(135deg, #374151, #1f2937)" }}
+                    className="btn-secondary"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path

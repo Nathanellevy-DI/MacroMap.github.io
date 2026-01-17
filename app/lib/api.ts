@@ -1,8 +1,8 @@
 "use client";
 
-import { AnalysisResult } from "../types";
+import { AnalysisResult, MealAnalysisResult } from "../types";
 
-const SYSTEM_PROMPT = `You are the "MacroMap Audit Engine", a strict health-first analyzer comparing food safety standards between the US and the EU (2026 standards).
+const INGREDIENT_SYSTEM_PROMPT = `You are the "MacroMap Audit Engine", a strict health-first analyzer comparing food safety standards between the US and the EU (2026 standards).
 
 Your task:
 1. Receive a list of ingredients (text or OCR output from an image).
@@ -39,11 +39,37 @@ Output ONLY valid JSON in this exact format (no markdown, no explanation):
   "all_ingredients": ["ingredient1", "ingredient2", ...]
 }`;
 
-export async function analyzeImage(
+const MACRO_SYSTEM_PROMPT = `You are a precise nutrition analyzer. Your task is to extract macro-nutrient information from food packaging labels or identify nutritional content of whole foods.
+
+When shown an image of:
+1. Food packaging nutrition label - Extract exact values from the label
+2. Whole food (fruit, vegetable, meat, etc.) - Estimate based on standard USDA values
+3. Recipe ingredient - Provide typical nutritional values
+
+Output ONLY valid JSON in this exact format (no markdown, no explanation):
+{
+  "food_item": {
+    "name": "Food name",
+    "brand": "Brand name if visible, or null",
+    "serving_size": "e.g., 100g, 1 cup, 1 medium",
+    "calories": number,
+    "protein": number (grams),
+    "carbs": number (grams),
+    "fat": number (grams),
+    "fiber": number (grams, optional),
+    "sugar": number (grams, optional),
+    "sodium": number (mg, optional)
+  }
+}
+
+Be as accurate as possible. If you cannot determine exact values, provide best estimates based on typical nutritional data.`;
+
+async function callOpenAI(
     imageBase64: string,
-    apiKey: string
-): Promise<AnalysisResult> {
-    // Remove data URL prefix if present
+    apiKey: string,
+    systemPrompt: string,
+    userPrompt: string
+): Promise<string> {
     const base64Image = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -55,17 +81,11 @@ export async function analyzeImage(
         body: JSON.stringify({
             model: "gpt-4o",
             messages: [
-                {
-                    role: "system",
-                    content: SYSTEM_PROMPT,
-                },
+                { role: "system", content: systemPrompt },
                 {
                     role: "user",
                     content: [
-                        {
-                            type: "text",
-                            text: "Analyze the ingredients in this food label image. Extract all ingredients and identify any that are banned or restricted in the EU.",
-                        },
+                        { type: "text", text: userPrompt },
                         {
                             type: "image_url",
                             image_url: {
@@ -93,17 +113,45 @@ export async function analyzeImage(
         throw new Error("No response from AI");
     }
 
-    // Parse the JSON response
+    return content;
+}
+
+function parseJSON<T>(content: string): T {
     try {
         return JSON.parse(content);
     } catch {
-        // If parsing fails, try to extract JSON from the response
         const jsonMatch = content.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             return JSON.parse(jsonMatch[0]);
         }
         throw new Error("Failed to parse AI response");
     }
+}
+
+export async function analyzeImage(
+    imageBase64: string,
+    apiKey: string
+): Promise<AnalysisResult> {
+    const content = await callOpenAI(
+        imageBase64,
+        apiKey,
+        INGREDIENT_SYSTEM_PROMPT,
+        "Analyze the ingredients in this food label image. Extract all ingredients and identify any that are banned or restricted in the EU."
+    );
+    return parseJSON<AnalysisResult>(content);
+}
+
+export async function analyzeMacros(
+    imageBase64: string,
+    apiKey: string
+): Promise<MealAnalysisResult> {
+    const content = await callOpenAI(
+        imageBase64,
+        apiKey,
+        MACRO_SYSTEM_PROMPT,
+        "Extract the nutritional information from this food image. If it's a nutrition label, read the exact values. If it's a whole food, estimate based on typical values."
+    );
+    return parseJSON<MealAnalysisResult>(content);
 }
 
 export function getApiKey(): string | null {
