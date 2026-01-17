@@ -1,4 +1,4 @@
 1:"$Sreact.fragment"
 2:I[73575,["/MacroMap.github.io/_next/static/chunks/ed64aee22866ba98.js"],"default"]
 3:I[92165,["/MacroMap.github.io/_next/static/chunks/ed64aee22866ba98.js"],"default"]
-0:{"buildId":"xn8189vGHyzH17oaBk1Sj","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"Y1AeIjbd8K5Y8b2xB-ywc","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"loading":null,"isPartial":false}
