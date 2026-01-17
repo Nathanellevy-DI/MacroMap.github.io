@@ -7,13 +7,34 @@ interface MeSectionProps {
     setWeight: (weight: number) => void;
     diet: string | null;
     setDiet: (diet: string | null) => void;
+    enabledTools: string[];
+    setEnabledTools: (tools: string[]) => void;
+    profileName: string;
+    setProfileName: (name: string) => void;
+    profilePicture: string | null;
+    setProfilePicture: (picture: string | null) => void;
+    waterGoal: number;
+    setWaterGoal: (goal: number) => void;
+    waterUnit: "glasses" | "oz" | "liters";
+    setWaterUnit: (unit: "glasses" | "oz" | "liters") => void;
 }
+
+const AVAILABLE_TOOLS = [
+    { id: "meal-builder", label: "Meal Builder", icon: "🥬" },
+    { id: "scanner", label: "Ingredient Scanner", icon: "📷" },
+    { id: "my-diet", label: "My Diet", icon: "🔥" },
+];
 
 export default function MeSection({
     budget, setBudget,
     trackingMode, setTrackingMode,
     weight, setWeight,
-    diet, setDiet
+    diet, setDiet,
+    enabledTools, setEnabledTools,
+    profileName, setProfileName,
+    profilePicture, setProfilePicture,
+    waterGoal, setWaterGoal,
+    waterUnit, setWaterUnit
 }: MeSectionProps) {
     const handleGoalClick = () => {
         const newGoal = prompt("Enter your daily calorie goal:", budget.toString());
@@ -36,6 +57,52 @@ export default function MeSection({
         setDiet(nextDiet === "None" ? null : nextDiet);
     };
 
+    const handleNameClick = () => {
+        const newName = prompt("Enter your name:", profileName);
+        if (newName && newName.trim()) {
+            setProfileName(newName.trim());
+        }
+    };
+
+    const handleProfilePictureClick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e: any) => {
+            const file = e.target?.files?.[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    setProfilePicture(event.target?.result as string);
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    };
+
+    const handleWaterGoalClick = () => {
+        const newGoal = prompt(`Enter your daily water goal (${waterUnit}):`, waterGoal.toString());
+        if (newGoal && !isNaN(Number(newGoal)) && Number(newGoal) > 0) {
+            setWaterGoal(Number(newGoal));
+        }
+    };
+
+    const handleWaterUnitClick = () => {
+        const units: ("glasses" | "oz" | "liters")[] = ["glasses", "oz", "liters"];
+        const currentIndex = units.indexOf(waterUnit);
+        const nextIndex = (currentIndex + 1) % units.length;
+        setWaterUnit(units[nextIndex]);
+    };
+
+    const toggleTool = (toolId: string) => {
+        if (enabledTools.includes(toolId)) {
+            setEnabledTools(enabledTools.filter(id => id !== toolId));
+        } else {
+            setEnabledTools([...enabledTools, toolId]);
+        }
+    };
+
 
 
     return (
@@ -49,12 +116,19 @@ export default function MeSection({
                 {/* Stats Card */}
                 <div className="bg-emerald-500 rounded-3xl p-6 text-white shadow-lg shadow-emerald-500/20">
                     <div className="flex items-center gap-4 mb-6">
-                        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold border-2 border-white/30">
-                            ME
+                        <div
+                            onClick={handleProfilePictureClick}
+                            className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold border-2 border-white/30 overflow-hidden cursor-pointer hover:bg-white/30 transition-colors"
+                        >
+                            {profilePicture ? (
+                                <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="text-white">📷</span>
+                            )}
                         </div>
-                        <div>
-                            <h2 className="text-lg font-bold">New User</h2>
-                            <p className="text-emerald-100 text-sm">Level 1 • Beginner</p>
+                        <div onClick={handleNameClick} className="cursor-pointer hover:opacity-80 transition-opacity">
+                            <h2 className="text-lg font-bold">{profileName}</h2>
+                            <p className="text-emerald-100 text-sm">Tap to edit name</p>
                         </div>
                     </div>
 
@@ -117,6 +191,42 @@ export default function MeSection({
                                 <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Water Goal */}
+                    <button onClick={handleWaterGoalClick} className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors">
+                        <span className="text-xl">💧</span>
+                        <span className="flex-1 text-left font-medium text-gray-800">Water Goal</span>
+                        <span className="text-blue-500 font-bold">{waterGoal} {waterUnit}</span>
+                        <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+
+                    {/* Water Unit Toggle */}
+                    <button onClick={handleWaterUnitClick} className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors">
+                        <span className="text-xl">📊</span>
+                        <div className="flex-1 text-left">
+                            <span className="block font-medium text-gray-800">Water Unit</span>
+                            <span className="text-xs text-gray-400">Tap to switch</span>
+                        </div>
+                        <span className="text-blue-500 font-bold capitalize">{waterUnit}</span>
+                    </button>
+
+                    {/* Quick Tools Customization */}
+                    <div className="space-y-2">
+                        <h4 className="font-semibold text-gray-700 ml-1 text-sm">Customize Quick Tools</h4>
+                        {AVAILABLE_TOOLS.map((tool) => (
+                            <button
+                                key={tool.id}
+                                onClick={() => toggleTool(tool.id)}
+                                className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors"
+                            >
+                                <span className="text-xl">{tool.icon}</span>
+                                <span className="flex-1 text-left font-medium text-gray-800">{tool.label}</span>
+                                <div className={`w-12 h-6 rounded-full p-1 transition-colors ${enabledTools.includes(tool.id) ? 'bg-emerald-500' : 'bg-gray-300'}`}>
+                                    <div className={`w-4 h-4 rounded-full bg-white shadow-sm transform transition-transform ${enabledTools.includes(tool.id) ? "translate-x-6" : ""}`} />
+                                </div>
+                            </button>
+                        ))}
                     </div>
 
                     {[

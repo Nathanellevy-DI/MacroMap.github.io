@@ -38,6 +38,11 @@ export default function Home() {
   const [trackingMode, setTrackingMode] = useState<"cut" | "maintain" | "bulk" | "no-tracking">("maintain");
   const [weight, setWeight] = useState(70);
   const [diet, setDiet] = useState<string | null>(null);
+  const [enabledTools, setEnabledTools] = useState<string[]>(["meal-builder", "scanner", "my-diet"]);
+  const [profileName, setProfileName] = useState("User");
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [waterGoal, setWaterGoal] = useState(8);
+  const [waterUnit, setWaterUnit] = useState<"glasses" | "oz" | "liters">("glasses");
   const [isLoaded, setIsLoaded] = useState(false);
 
   // --- PERSISTENCE ---
@@ -58,6 +63,11 @@ export default function Home() {
         if (parsed.trackingMode) setTrackingMode(parsed.trackingMode);
         if (parsed.weight) setWeight(parsed.weight);
         if (parsed.diet) setDiet(parsed.diet);
+        if (parsed.enabledTools) setEnabledTools(parsed.enabledTools);
+        if (parsed.profileName) setProfileName(parsed.profileName);
+        if (parsed.profilePicture) setProfilePicture(parsed.profilePicture);
+        if (parsed.waterGoal) setWaterGoal(parsed.waterGoal);
+        if (parsed.waterUnit) setWaterUnit(parsed.waterUnit);
       } catch (e) { console.error("Failed to parse settings", e); }
     }
     setIsLoaded(true);
@@ -75,10 +85,15 @@ export default function Home() {
         budget,
         trackingMode,
         weight,
-        diet
+        diet,
+        enabledTools,
+        profileName,
+        profilePicture,
+        waterGoal,
+        waterUnit
       }));
     }
-  }, [budget, trackingMode, weight, diet, isLoaded]);
+  }, [budget, trackingMode, weight, diet, enabledTools, profileName, profilePicture, waterGoal, waterUnit, isLoaded]);
 
   const updateHistory = (type: "consumed" | "water", value: number) => {
     setHistory(prev => {
@@ -192,6 +207,16 @@ export default function Home() {
         setWeight={setWeight}
         diet={diet}
         setDiet={setDiet}
+        enabledTools={enabledTools}
+        setEnabledTools={setEnabledTools}
+        profileName={profileName}
+        setProfileName={setProfileName}
+        profilePicture={profilePicture}
+        setProfilePicture={setProfilePicture}
+        waterGoal={waterGoal}
+        setWaterGoal={setWaterGoal}
+        waterUnit={waterUnit}
+        setWaterUnit={setWaterUnit}
       />
     )
   }
@@ -251,36 +276,55 @@ export default function Home() {
             </div>
 
             {/* Ring Visualization - FIXED: Icon embedded in SVG for perfect centering */}
-            <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
-              <svg className="w-full h-full" viewBox="0 0 256 256">
-                {/* Rotate Group around center 128 128 */}
-                <g transform="rotate(-90 128 128)">
-                  <circle cx="128" cy="128" r={radius} stroke="#f1f5f9" strokeWidth="24" fill="none" />
-                  {/* Progress Ring */}
-                  <circle
-                    cx="128"
-                    cy="128"
-                    r={radius}
-                    stroke={progressPercent > 100 ? "#ef4444" : "#22c55e"}
-                    strokeWidth="24"
-                    strokeLinecap="round"
-                    fill="none"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={strokeDashoffset}
-                    style={{ transition: "stroke-dashoffset 1s ease-in-out, stroke 0.5s ease" }}
-                  />
-                </g>
-                {/* Icon Group - Perfectly centered relative to SVG coordinate space */}
-                <g transform="translate(116, 20)">
-                  {/* 128 (center) - 12 (half icon width) = 116. Top margin 20. */}
-                  <path className={progressPercent > 100 ? "text-red-500" : "text-emerald-500"} fill="currentColor" d="M17.7 20.2l-2.6.2c-1.6 0-3.3-1.1-4.7-2.5-1.4-1.4-2.5-3.1-2.5-4.7L8.1 10.6c-.2-.7-1.1-1-1.6-.6-.5.4-.6 1.1-.3 1.6l1.2 2.3c-.6.8-1.7.9-2.5.3-.8-.6-.9-1.7-.3-2.5l2.3-3.8c.4-.6.3-1.4-.4-1.8-.6-.3-1.3-.2-1.7.4L3.6 8.8c-.8.8-1.5 2.1-1.9 3.5-.3 1.2.2 2.4.9 3.6 1.1 1.9 3.1 3.2 5.3 3.5 2.2.3 4.4-.3 6.1-1.6l2.1 1.2c.5.3 1.2.1 1.5-.4.4-.6.2-1.3-.4-1.6z M13.8 2.2c-.5.4-.5 1.1-.1 1.6l1.6 2.1c.4.6 1.2.6 1.7.2.5-.4.5-1.2.1-1.7l-1.6-2.1c-.4-.5-1.2-.5-1.7-.1z" />
-                </g>
-              </svg>
+            <div className="flex justify-center items-center w-full">
+              <div className="relative w-64 h-64 flex items-center justify-center">
+                <svg className="w-full h-full" viewBox="0 0 280 280">
+                  {/* Water Ring (Outer) */}
+                  <g transform="rotate(-90 140 140)">
+                    <circle cx="140" cy="140" r="130" stroke="#e0f2fe" strokeWidth="12" fill="none" />
+                    <circle
+                      cx="140"
+                      cy="140"
+                      r="130"
+                      stroke="#0ea5e9"
+                      strokeWidth="12"
+                      strokeLinecap="round"
+                      fill="none"
+                      strokeDasharray={2 * Math.PI * 130}
+                      strokeDashoffset={2 * Math.PI * 130 - (Math.min(water, waterGoal) / waterGoal) * (2 * Math.PI * 130)}
+                      style={{ transition: "stroke-dashoffset 1s ease-in-out" }}
+                    />
+                  </g>
 
-              {/* Center Content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-4xl font-bold text-gray-800">{caloriesLeft}</span>
-                <span className="text-sm text-gray-400 font-medium">left</span>
+                  {/* Calorie Ring (Inner) */}
+                  <g transform="rotate(-90 140 140)">
+                    <circle cx="140" cy="140" r={radius} stroke="#f1f5f9" strokeWidth="24" fill="none" />
+                    {/* Progress Ring */}
+                    <circle
+                      cx="140"
+                      cy="140"
+                      r={radius}
+                      stroke={progressPercent > 100 ? "#ef4444" : "#22c55e"}
+                      strokeWidth="24"
+                      strokeLinecap="round"
+                      fill="none"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={strokeDashoffset}
+                      style={{ transition: "stroke-dashoffset 1s ease-in-out, stroke 0.5s ease" }}
+                    />
+                  </g>
+                  {/* Icon Group - Perfectly centered relative to SVG coordinate space */}
+                  <g transform="translate(128, 32)">
+                    {/* 140 (center) - 12 (half icon width) = 128. Top margin 32. */}
+                    <path className={progressPercent > 100 ? "text-red-500" : "text-emerald-500"} fill="currentColor" d="M17.7 20.2l-2.6.2c-1.6 0-3.3-1.1-4.7-2.5-1.4-1.4-2.5-3.1-2.5-4.7L8.1 10.6c-.2-.7-1.1-1-1.6-.6-.5.4-.6 1.1-.3 1.6l1.2 2.3c-.6.8-1.7.9-2.5.3-.8-.6-.9-1.7-.3-2.5l2.3-3.8c.4-.6.3-1.4-.4-1.8-.6-.3-1.3-.2-1.7.4L3.6 8.8c-.8.8-1.5 2.1-1.9 3.5-.3 1.2.2 2.4.9 3.6 1.1 1.9 3.1 3.2 5.3 3.5 2.2.3 4.4-.3 6.1-1.6l2.1 1.2c.5.3 1.2.1 1.5-.4.4-.6.2-1.3-.4-1.6z M13.8 2.2c-.5.4-.5 1.1-.1 1.6l1.6 2.1c.4.6 1.2.6 1.7.2.5-.4.5-1.2.1-1.7l-1.6-2.1c-.4-.5-1.2-.5-1.7-.1z" />
+                  </g>
+                </svg>
+
+                {/* Center Content */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-4xl font-bold text-gray-800">{caloriesLeft}</span>
+                  <span className="text-sm text-gray-400 font-medium">left</span>
+                </div>
               </div>
             </div>
 
@@ -306,7 +350,7 @@ export default function Home() {
         <div className="bg-blue-500 rounded-3xl p-6 text-white shadow-lg shadow-blue-500/20 flex items-center justify-between">
           <div>
             <h3 className="font-bold text-lg mb-1">Water</h3>
-            <p className="text-blue-100 text-sm">Goal: 8 glasses</p>
+            <p className="text-blue-100 text-sm">Goal: {waterGoal} {waterUnit}</p>
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -331,37 +375,43 @@ export default function Home() {
         <h3 className="text-gray-700 font-semibold pl-1">Quick Tools</h3>
 
         {/* Meal Builder (AI Meal Scan) */}
-        <div
-          onClick={() => handleToolClick("meal-builder")}
-          className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform"
-        >
-          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-2xl">🥬</div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-800">Meal Builder</h3>
-            <p className="text-xs text-gray-500">Build meals from restaurants & foods</p>
+        {enabledTools.includes("meal-builder") && (
+          <div
+            onClick={() => handleToolClick("meal-builder")}
+            className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform"
+          >
+            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-2xl">🥬</div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-800">Meal Builder</h3>
+              <p className="text-xs text-gray-500">Build meals from restaurants & foods</p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Scanner (Restaurant Menu AI Scan) */}
-        <div
-          onClick={() => handleToolClick("scanner")}
-          className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform"
-        >
-          <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-2xl">📷</div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-800">Ingredient Scanner</h3>
-            <p className="text-xs text-gray-500">Check for bans & red flags</p>
+        {enabledTools.includes("scanner") && (
+          <div
+            onClick={() => handleToolClick("scanner")}
+            className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform"
+          >
+            <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-2xl">📷</div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-800">Ingredient Scanner</h3>
+              <p className="text-xs text-gray-500">Check for bans & red flags</p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* My Diet (Restored) */}
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 active:scale-[0.98] transition-transform">
-          <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-2xl">🔥</div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-800">My Diet</h3>
-            <p className="text-xs text-gray-500">Custom plan: Intermittent Fasting</p>
+        {enabledTools.includes("my-diet") && (
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 active:scale-[0.98] transition-transform">
+            <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-2xl">🔥</div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-800">My Diet</h3>
+              <p className="text-xs text-gray-500">Custom plan: Intermittent Fasting</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Weekly Graph (Replaces Advice) */}
@@ -410,6 +460,16 @@ export default function Home() {
             setWeight={setWeight}
             diet={diet}
             setDiet={setDiet}
+            enabledTools={enabledTools}
+            setEnabledTools={setEnabledTools}
+            profileName={profileName}
+            setProfileName={setProfileName}
+            profilePicture={profilePicture}
+            setProfilePicture={setProfilePicture}
+            waterGoal={waterGoal}
+            setWaterGoal={setWaterGoal}
+            waterUnit={waterUnit}
+            setWaterUnit={setWaterUnit}
           />
         )}
       </div>
