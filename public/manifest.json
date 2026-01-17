@@ -3,8 +3,9 @@
     "short_name": "MacroMap",
     "description": "Track macros, scan ingredients, and make informed food choices",
     "start_url": "/MacroMap.github.io/",
+    "scope": "/MacroMap.github.io/",
     "display": "standalone",
-    "background_color": "#050505",
+    "background_color": "#0a0a0a",
     "theme_color": "#10b981",
     "orientation": "portrait",
     "icons": [
@@ -12,13 +13,25 @@
             "src": "/MacroMap.github.io/icon-192.png",
             "sizes": "192x192",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
         },
         {
             "src": "/MacroMap.github.io/icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "/MacroMap.github.io/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/MacroMap.github.io/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ],
     "categories": [

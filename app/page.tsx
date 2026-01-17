@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Scanner from "./components/Scanner";
 import Results from "./components/Results";
 import MealBuilder from "./components/MealBuilder";
+import InstallPrompt from "./components/InstallPrompt";
 import { analyzeIngredients } from "./lib/ingredients-db";
 import { getAllRestaurantCount } from "./lib/restaurants";
 
@@ -229,6 +230,9 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Install Prompt */}
+      <InstallPrompt />
     </main>
   );
 }

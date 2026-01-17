@@ -3,14 +3,17 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { FoodItem, MacroTotals } from "../types";
 import { searchFood, NutritionData, findCommonFood, getProductByBarcode } from "../lib/food-api";
-import { searchRestaurants, MenuItem, Restaurant } from "../lib/restaurants";
-import { searchWholeFoods, WholeFood, calculateNutrition, lbsToGrams, kgToGrams, ozToGrams } from "../lib/whole-foods";
+import { searchRestaurants, MenuItem, Restaurant, RESTAURANTS } from "../lib/restaurants";
+import { searchWholeFoods, WholeFood, calculateNutrition, lbsToGrams, kgToGrams, ozToGrams, WHOLE_FOODS } from "../lib/whole-foods";
 
 interface MealBuilderProps {
     onBack: () => void;
 }
 
 type Tab = "search" | "restaurant" | "custom" | "scan";
+
+// Get unique categories from whole foods
+const FOOD_CATEGORIES = [...new Set(WHOLE_FOODS.map(f => f.category))];
 
 function MacroRing({ value, max, color, label }: { value: number; max: number; color: string; label: string }) {
     const percentage = Math.min((value / max) * 100, 100);
@@ -59,8 +62,6 @@ function MacroSummary({ totals }: { totals: MacroTotals }) {
                     <MacroRing value={totals.fat} max={65} color="#f59e0b" label="Fat" />
                 </div>
             </div>
-
-            {/* Progress Bars */}
             <div className="space-y-2">
                 {[
                     { name: "P", value: totals.protein, max: 150, color: "#22c55e" },
@@ -70,13 +71,7 @@ function MacroSummary({ totals }: { totals: MacroTotals }) {
                     <div key={m.name} className="flex items-center gap-2">
                         <span className="text-xs w-4 text-gray-500">{m.name}</span>
                         <div className="flex-1 macro-bar">
-                            <div
-                                className="macro-bar-fill"
-                                style={{
-                                    width: `${Math.min((m.value / m.max) * 100, 100)}%`,
-                                    background: m.color,
-                                }}
-                            />
+                            <div className="macro-bar-fill" style={{ width: `${Math.min((m.value / m.max) * 100, 100)}%`, background: m.color }} />
                         </div>
                         <span className="text-xs w-12 text-right text-gray-400">{m.value.toFixed(0)}g</span>
                     </div>
@@ -108,20 +103,13 @@ function FoodCard({ item, onRemove }: { item: FoodItem; onRemove: () => void }) 
     );
 }
 
-function RestaurantMenuModal({
-    restaurant,
-    onAdd,
-    onClose,
-}: {
-    restaurant: Restaurant;
-    onAdd: (item: MenuItem) => void;
-    onClose: () => void;
-}) {
+function RestaurantMenuModal({ restaurant, onAdd, onClose }: { restaurant: Restaurant; onAdd: (item: MenuItem) => void; onClose: () => void }) {
     const categories = [...new Set(restaurant.items.map((i) => i.category))];
 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content slide-up" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-handle" />
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <span className="text-3xl">{restaurant.logo}</span>
@@ -139,28 +127,22 @@ function RestaurantMenuModal({
                         <div key={cat}>
                             <h4 className="text-sm font-semibold text-gray-400 mb-2">{cat}</h4>
                             <div className="space-y-2">
-                                {restaurant.items
-                                    .filter((i) => i.category === cat)
-                                    .map((item, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => onAdd(item)}
-                                            className="w-full glass-card p-3 text-left hover:bg-white/5 flex items-center justify-between"
-                                        >
-                                            <div>
-                                                <p className="font-medium text-sm">{item.name}</p>
-                                                <div className="flex gap-2 mt-1 text-xs text-gray-500">
-                                                    <span>{item.calories} cal</span>
-                                                    <span className="text-emerald-400">{item.protein}g P</span>
-                                                    <span className="text-blue-400">{item.carbs}g C</span>
-                                                    <span className="text-amber-400">{item.fat}g F</span>
-                                                </div>
+                                {restaurant.items.filter((i) => i.category === cat).map((item, idx) => (
+                                    <button key={idx} onClick={() => onAdd(item)} className="w-full glass-card p-3 text-left hover:bg-white/5 flex items-center justify-between">
+                                        <div>
+                                            <p className="font-medium text-sm">{item.name}</p>
+                                            <div className="flex gap-2 mt-1 text-xs text-gray-500">
+                                                <span>{item.calories} cal</span>
+                                                <span className="text-emerald-400">{item.protein}g P</span>
+                                                <span className="text-blue-400">{item.carbs}g C</span>
+                                                <span className="text-amber-400">{item.fat}g F</span>
                                             </div>
-                                            <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                            </svg>
-                                        </button>
-                                    ))}
+                                        </div>
+                                        <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     ))}
@@ -170,15 +152,7 @@ function RestaurantMenuModal({
     );
 }
 
-function CustomFoodModal({
-    food,
-    onAdd,
-    onClose,
-}: {
-    food: WholeFood;
-    onAdd: (food: FoodItem) => void;
-    onClose: () => void;
-}) {
+function CustomFoodModal({ food, onAdd, onClose }: { food: WholeFood; onAdd: (food: FoodItem) => void; onClose: () => void }) {
     const [weight, setWeight] = useState("");
     const [unit, setUnit] = useState<"g" | "oz" | "lbs" | "kg">("g");
     const [selectedServing, setSelectedServing] = useState<string | null>(null);
@@ -202,7 +176,6 @@ function CustomFoodModal({
 
     const handleAdd = () => {
         if (grams <= 0) return;
-
         onAdd({
             id: Date.now().toString(),
             name: food.name,
@@ -219,6 +192,7 @@ function CustomFoodModal({
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content slide-up" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-handle" />
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <span className="text-3xl">{food.emoji}</span>
@@ -234,21 +208,14 @@ function CustomFoodModal({
                     </button>
                 </div>
 
-                {/* Serving Size Selection */}
                 <div className="mb-4">
                     <label className="text-sm font-medium text-gray-400 mb-2 block">Quick Servings</label>
                     <div className="flex flex-wrap gap-2">
                         {food.commonServings.map((s) => (
                             <button
                                 key={s.name}
-                                onClick={() => {
-                                    setSelectedServing(s.name);
-                                    setWeight("");
-                                }}
-                                className={`px-3 py-2 rounded-lg text-sm transition-all ${selectedServing === s.name
-                                        ? "bg-emerald-500 text-white"
-                                        : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                                    }`}
+                                onClick={() => { setSelectedServing(s.name); setWeight(""); }}
+                                className={`px-3 py-2 rounded-lg text-sm transition-all ${selectedServing === s.name ? "bg-emerald-500 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}
                             >
                                 {s.name}
                             </button>
@@ -256,25 +223,11 @@ function CustomFoodModal({
                     </div>
                 </div>
 
-                {/* Custom Weight */}
                 <div className="mb-4">
                     <label className="text-sm font-medium text-gray-400 mb-2 block">Or enter weight</label>
                     <div className="flex gap-2">
-                        <input
-                            type="number"
-                            value={weight}
-                            onChange={(e) => {
-                                setWeight(e.target.value);
-                                setSelectedServing(null);
-                            }}
-                            placeholder="Amount"
-                            className="flex-1"
-                        />
-                        <select
-                            value={unit}
-                            onChange={(e) => setUnit(e.target.value as typeof unit)}
-                            className="w-20"
-                        >
+                        <input type="number" value={weight} onChange={(e) => { setWeight(e.target.value); setSelectedServing(null); }} placeholder="Amount" className="flex-1" />
+                        <select value={unit} onChange={(e) => setUnit(e.target.value as typeof unit)} className="w-20">
                             <option value="g">g</option>
                             <option value="oz">oz</option>
                             <option value="lbs">lbs</option>
@@ -283,35 +236,19 @@ function CustomFoodModal({
                     </div>
                 </div>
 
-                {/* Nutrition Preview */}
                 <div className="glass-card p-4 mb-4">
                     <div className="text-center mb-3">
                         <span className="text-3xl font-bold text-emerald-400">{nutrition.calories}</span>
                         <span className="text-gray-500 ml-1">cal</span>
                     </div>
                     <div className="flex justify-around text-center">
-                        <div>
-                            <div className="text-lg font-semibold text-emerald-400">{nutrition.protein}g</div>
-                            <div className="text-xs text-gray-500">Protein</div>
-                        </div>
-                        <div>
-                            <div className="text-lg font-semibold text-blue-400">{nutrition.carbs}g</div>
-                            <div className="text-xs text-gray-500">Carbs</div>
-                        </div>
-                        <div>
-                            <div className="text-lg font-semibold text-amber-400">{nutrition.fat}g</div>
-                            <div className="text-xs text-gray-500">Fat</div>
-                        </div>
+                        <div><div className="text-lg font-semibold text-emerald-400">{nutrition.protein}g</div><div className="text-xs text-gray-500">Protein</div></div>
+                        <div><div className="text-lg font-semibold text-blue-400">{nutrition.carbs}g</div><div className="text-xs text-gray-500">Carbs</div></div>
+                        <div><div className="text-lg font-semibold text-amber-400">{nutrition.fat}g</div><div className="text-xs text-gray-500">Fat</div></div>
                     </div>
                 </div>
 
-                <button
-                    onClick={handleAdd}
-                    disabled={grams <= 0}
-                    className="btn-primary"
-                >
-                    Add to Meal
-                </button>
+                <button onClick={handleAdd} disabled={grams <= 0} className="btn btn-primary w-full">Add to Meal</button>
             </div>
         </div>
     );
@@ -322,11 +259,10 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
     const [activeTab, setActiveTab] = useState<Tab>("search");
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<NutritionData[]>([]);
-    const [restaurantResults, setRestaurantResults] = useState<{ restaurant: Restaurant; items: MenuItem[] }[]>([]);
-    const [wholeFoodResults, setWholeFoodResults] = useState<WholeFood[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
     const [selectedWholeFood, setSelectedWholeFood] = useState<WholeFood | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [barcode, setBarcode] = useState("");
     const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -342,32 +278,16 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
         { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0 }
     );
 
-    const handleSearch = useCallback(async (query: string, tab: Tab) => {
-        setSearchQuery(query);
-
-        if (searchTimeout.current) {
-            clearTimeout(searchTimeout.current);
-        }
-
-        if (query.length < 2) {
-            setSearchResults([]);
-            setRestaurantResults([]);
-            setWholeFoodResults([]);
-            return;
-        }
+    const handleSearch = useCallback(async (query: string) => {
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        if (query.length < 2) { setSearchResults([]); return; }
 
         searchTimeout.current = setTimeout(async () => {
             setIsSearching(true);
             try {
-                if (tab === "search") {
-                    const commonFood = findCommonFood(query);
-                    const apiResults = await searchFood(query);
-                    setSearchResults(commonFood ? [commonFood, ...apiResults] : apiResults);
-                } else if (tab === "restaurant") {
-                    setRestaurantResults(searchRestaurants(query));
-                } else if (tab === "custom") {
-                    setWholeFoodResults(searchWholeFoods(query));
-                }
+                const commonFood = findCommonFood(query);
+                const apiResults = await searchFood(query);
+                setSearchResults(commonFood ? [commonFood, ...apiResults] : apiResults);
             } catch (error) {
                 console.error("Search error:", error);
             } finally {
@@ -382,15 +302,7 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
         try {
             const product = await getProductByBarcode(barcode);
             if (product) {
-                handleAddFood({
-                    name: product.name,
-                    brand: product.brand,
-                    servingSize: product.servingSize,
-                    calories: product.calories,
-                    protein: product.protein,
-                    carbs: product.carbs,
-                    fat: product.fat,
-                });
+                handleAddFood({ name: product.name, brand: product.brand, servingSize: product.servingSize, calories: product.calories, protein: product.protein, carbs: product.carbs, fat: product.fat });
                 setBarcode("");
             }
         } catch (error) {
@@ -401,44 +313,22 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
     };
 
     const handleAddFood = (food: Partial<FoodItem> & { name: string; calories: number; protein: number; carbs: number; fat: number }) => {
-        const newFood: FoodItem = {
-            id: Date.now().toString(),
-            name: food.name,
-            brand: food.brand,
-            servingSize: food.servingSize || "1 serving",
-            calories: food.calories,
-            protein: food.protein,
-            carbs: food.carbs,
-            fat: food.fat,
-            fiber: food.fiber,
-            sugar: food.sugar,
-            sodium: food.sodium,
-            timestamp: Date.now(),
-        };
+        const newFood: FoodItem = { id: Date.now().toString(), name: food.name, brand: food.brand, servingSize: food.servingSize || "1 serving", calories: food.calories, protein: food.protein, carbs: food.carbs, fat: food.fat, fiber: food.fiber, sugar: food.sugar, sodium: food.sodium, timestamp: Date.now() };
         setFoods((prev) => [...prev, newFood]);
         setSearchQuery("");
         setSearchResults([]);
-        setRestaurantResults([]);
     };
 
     const handleAddMenuItem = (item: MenuItem) => {
-        handleAddFood({
-            name: item.name,
-            servingSize: "1 serving",
-            calories: item.calories,
-            protein: item.protein,
-            carbs: item.carbs,
-            fat: item.fat,
-        });
+        handleAddFood({ name: item.name, servingSize: "1 serving", calories: item.calories, protein: item.protein, carbs: item.carbs, fat: item.fat });
         setSelectedRestaurant(null);
     };
 
-    useEffect(() => {
-        handleSearch(searchQuery, activeTab);
-    }, [activeTab, searchQuery, handleSearch]);
+    // Get foods filtered by category
+    const filteredWholeFoods = selectedCategory ? WHOLE_FOODS.filter(f => f.category === selectedCategory) : [];
 
     return (
-        <div className="max-w-lg mx-auto space-y-4 safe-area-top safe-area-bottom">
+        <div className="container safe-top safe-bottom py-6 max-w-lg mx-auto space-y-4">
             {/* Header */}
             <div className="flex items-center gap-3">
                 <button onClick={onBack} className="icon-btn">
@@ -449,88 +339,33 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
                 <h1 className="text-xl font-bold gradient-text">Meal Builder</h1>
             </div>
 
-            {/* Macro Summary */}
             <MacroSummary totals={totals} />
 
             {/* Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
+            <div className="tabs-container">
                 {[
-                    { id: "search", label: "🔍 Search", icon: "search" },
-                    { id: "restaurant", label: "🍔 Restaurant", icon: "restaurant" },
-                    { id: "custom", label: "🥩 Whole Foods", icon: "custom" },
-                    { id: "scan", label: "📷 Barcode", icon: "scan" },
+                    { id: "search", label: "🔍 Search" },
+                    { id: "restaurant", label: "🍔 Restaurant" },
+                    { id: "custom", label: "🥩 Whole Foods" },
+                    { id: "scan", label: "📷 Barcode" },
                 ].map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id as Tab)}
-                        className={`tab-button whitespace-nowrap ${activeTab === tab.id ? "active" : ""}`}
-                    >
+                    <button key={tab.id} onClick={() => { setActiveTab(tab.id as Tab); setSelectedCategory(null); }} className={`tab-button ${activeTab === tab.id ? "active" : ""}`}>
                         {tab.label}
                     </button>
                 ))}
             </div>
 
             {/* Tab Content */}
-            <div className="min-h-[200px]">
-                {activeTab === "scan" ? (
-                    <div className="space-y-4">
-                        <div className="glass-card p-6 text-center">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 flex items-center justify-center">
-                                <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                </svg>
-                            </div>
-                            <h3 className="font-semibold mb-1">Enter Barcode</h3>
-                            <p className="text-sm text-gray-500 mb-4">Type the barcode number from the package</p>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={barcode}
-                                    onChange={(e) => setBarcode(e.target.value)}
-                                    placeholder="e.g., 012345678905"
-                                    className="flex-1"
-                                />
-                                <button
-                                    onClick={handleBarcodeSearch}
-                                    disabled={!barcode || isSearching}
-                                    className="btn-primary !w-auto !px-6"
-                                >
-                                    {isSearching ? "..." : "Add"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ) : (
+            <div className="min-h-[300px]">
+                {/* SEARCH TAB */}
+                {activeTab === "search" && (
                     <>
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder={
-                                activeTab === "search"
-                                    ? "Search foods..."
-                                    : activeTab === "restaurant"
-                                        ? "Search restaurants or menu items..."
-                                        : "Search whole foods (steak, chicken, etc)..."
-                            }
-                            className="w-full mb-4"
-                        />
-
-                        {isSearching && (
-                            <div className="flex justify-center py-8">
-                                <div className="spinner" />
-                            </div>
-                        )}
-
-                        {/* Search Results */}
-                        {activeTab === "search" && searchResults.length > 0 && (
+                        <input type="text" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); handleSearch(e.target.value); }} placeholder="Search any food..." className="w-full mb-4" />
+                        {isSearching && <div className="flex justify-center py-8"><div className="spinner" /></div>}
+                        {searchResults.length > 0 && (
                             <div className="space-y-2 max-h-[300px] overflow-y-auto">
                                 {searchResults.map((food, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => handleAddFood(food)}
-                                        className="w-full glass-card p-3 text-left hover:bg-white/5 flex items-center gap-3"
-                                    >
+                                    <button key={i} onClick={() => handleAddFood(food)} className="w-full glass-card p-3 text-left hover:bg-white/5 flex items-center gap-3">
                                         {food.image && <img src={food.image} alt="" className="w-10 h-10 rounded-lg object-cover" />}
                                         <div className="flex-1 min-w-0">
                                             <p className="font-medium text-sm truncate">{food.name}</p>
@@ -546,66 +381,107 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
                                 ))}
                             </div>
                         )}
-
-                        {/* Restaurant Results */}
-                        {activeTab === "restaurant" && restaurantResults.length > 0 && (
-                            <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                                {restaurantResults.map((r, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => setSelectedRestaurant(r.restaurant)}
-                                        className="w-full restaurant-card p-4 text-left flex items-center gap-3"
-                                        style={{ borderLeftColor: r.restaurant.color, borderLeftWidth: 3 }}
-                                    >
-                                        <span className="text-2xl">{r.restaurant.logo}</span>
-                                        <div className="flex-1">
-                                            <p className="font-semibold">{r.restaurant.name}</p>
-                                            <p className="text-xs text-gray-500">{r.items.length} items</p>
-                                        </div>
-                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Whole Food Results */}
-                        {activeTab === "custom" && wholeFoodResults.length > 0 && (
-                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                                {wholeFoodResults.map((food, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => setSelectedWholeFood(food)}
-                                        className="w-full glass-card p-3 text-left hover:bg-white/5 flex items-center gap-3"
-                                    >
-                                        <span className="text-2xl w-10 text-center">{food.emoji}</span>
-                                        <div className="flex-1">
-                                            <p className="font-medium text-sm">{food.name}</p>
-                                            <p className="text-xs text-gray-500">{food.category} • per 100g: {food.per100g.calories} cal</p>
-                                        </div>
-                                        <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </button>
-                                ))}
+                        {!searchQuery && !isSearching && (
+                            <div className="text-center py-12 text-gray-500">
+                                <p className="text-4xl mb-3">🍽️</p>
+                                <p>Type to search foods from Open Food Facts</p>
                             </div>
                         )}
                     </>
                 )}
+
+                {/* RESTAURANT TAB */}
+                {activeTab === "restaurant" && (
+                    <>
+                        <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Filter restaurants..." className="w-full mb-4" />
+                        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                            {RESTAURANTS.filter(r => !searchQuery || r.name.toLowerCase().includes(searchQuery.toLowerCase())).map((restaurant, i) => (
+                                <button key={i} onClick={() => setSelectedRestaurant(restaurant)} className="w-full restaurant-card p-4 text-left flex items-center gap-3" style={{ borderLeftColor: restaurant.color, borderLeftWidth: 3 }}>
+                                    <span className="text-2xl">{restaurant.logo}</span>
+                                    <div className="flex-1">
+                                        <p className="font-semibold">{restaurant.name}</p>
+                                        <p className="text-xs text-gray-500">{restaurant.items.length} items</p>
+                                    </div>
+                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                            ))}
+                        </div>
+                    </>
+                )}
+
+                {/* WHOLE FOODS TAB */}
+                {activeTab === "custom" && (
+                    <>
+                        {!selectedCategory ? (
+                            <>
+                                <p className="text-sm text-gray-400 mb-3">Choose a category:</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {FOOD_CATEGORIES.map((cat) => (
+                                        <button key={cat} onClick={() => setSelectedCategory(cat)} className="glass-card p-4 text-left hover:bg-white/5">
+                                            <p className="font-semibold">{cat}</p>
+                                            <p className="text-xs text-gray-500">{WHOLE_FOODS.filter(f => f.category === cat).length} items</p>
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <button onClick={() => setSelectedCategory(null)} className="flex items-center gap-2 text-sm text-emerald-400 mb-3">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                    Back to categories
+                                </button>
+                                <h3 className="font-semibold mb-3">{selectedCategory}</h3>
+                                <div className="space-y-2 max-h-[350px] overflow-y-auto">
+                                    {filteredWholeFoods.map((food, i) => (
+                                        <button key={i} onClick={() => setSelectedWholeFood(food)} className="w-full glass-card p-3 text-left hover:bg-white/5 flex items-center gap-3">
+                                            <span className="text-2xl w-10 text-center">{food.emoji}</span>
+                                            <div className="flex-1">
+                                                <p className="font-medium text-sm">{food.name}</p>
+                                                <p className="text-xs text-gray-500">per 100g: {food.per100g.calories} cal • {food.per100g.protein}g P</p>
+                                            </div>
+                                            <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </>
+                )}
+
+                {/* BARCODE TAB */}
+                {activeTab === "scan" && (
+                    <div className="space-y-4">
+                        <div className="glass-card p-6 text-center">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 flex items-center justify-center">
+                                <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                </svg>
+                            </div>
+                            <h3 className="font-semibold mb-1">Enter Barcode</h3>
+                            <p className="text-sm text-gray-500 mb-4">Type the barcode number from the package</p>
+                            <div className="flex gap-2">
+                                <input type="text" value={barcode} onChange={(e) => setBarcode(e.target.value)} placeholder="e.g., 012345678905" className="flex-1" onKeyDown={(e) => e.key === "Enter" && handleBarcodeSearch()} />
+                                <button onClick={handleBarcodeSearch} disabled={!barcode || isSearching} className="btn btn-primary !w-auto !px-6">
+                                    {isSearching ? "..." : "Add"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {/* Food List */}
+            {/* Added Foods */}
             {foods.length > 0 && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-gray-400">Added ({foods.length})</h3>
-                        <button
-                            onClick={() => setFoods([])}
-                            className="text-xs text-red-400 hover:text-red-300"
-                        >
-                            Clear
-                        </button>
+                        <button onClick={() => setFoods([])} className="text-xs text-red-400 hover:text-red-300">Clear</button>
                     </div>
                     {foods.map((food) => (
                         <FoodCard key={food.id} item={food} onRemove={() => setFoods((p) => p.filter((f) => f.id !== food.id))} />
@@ -614,29 +490,10 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
             )}
 
             {/* Modals */}
-            {selectedRestaurant && (
-                <RestaurantMenuModal
-                    restaurant={selectedRestaurant}
-                    onAdd={handleAddMenuItem}
-                    onClose={() => setSelectedRestaurant(null)}
-                />
-            )}
+            {selectedRestaurant && <RestaurantMenuModal restaurant={selectedRestaurant} onAdd={handleAddMenuItem} onClose={() => setSelectedRestaurant(null)} />}
+            {selectedWholeFood && <CustomFoodModal food={selectedWholeFood} onAdd={(food) => { setFoods((prev) => [...prev, food]); setSelectedWholeFood(null); }} onClose={() => setSelectedWholeFood(null)} />}
 
-            {selectedWholeFood && (
-                <CustomFoodModal
-                    food={selectedWholeFood}
-                    onAdd={(food) => {
-                        setFoods((prev) => [...prev, food]);
-                        setSelectedWholeFood(null);
-                    }}
-                    onClose={() => setSelectedWholeFood(null)}
-                />
-            )}
-
-            {/* Footer */}
-            <p className="text-xs text-center text-gray-600 pt-4">
-                Data: Open Food Facts • 10 Restaurant Chains • 35+ Whole Foods
-            </p>
+            <p className="text-xs text-center text-gray-600 pt-4">Data: Open Food Facts • {RESTAURANTS.length} Restaurants • {WHOLE_FOODS.length}+ Whole Foods</p>
         </div>
     );
 }
