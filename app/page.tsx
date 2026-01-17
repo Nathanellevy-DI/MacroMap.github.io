@@ -9,6 +9,12 @@ import MeSection from "./components/MeSection";
 import InstallPrompt from "./components/InstallPrompt";
 import WeeklyGraph from "./components/WeeklyGraph";
 import NearbyRestaurants from "./components/NearbyRestaurants";
+import RewardCalendar from "./components/RewardCalendar";
+import ProgressDashboard from "./components/ProgressDashboard";
+import StreakRewards from "./components/StreakRewards";
+import AchievementPopup from "./components/AchievementPopup";
+import { UserProgress, Achievement, calculateLevel, calculateStreak, checkNewAchievements } from "./lib/achievements";
+import type { FoodItem } from "./types";
 
 type NavTab = "dashboard" | "add" | "me";
 
@@ -45,6 +51,22 @@ export default function Home() {
   const [waterUnit, setWaterUnit] = useState<"glasses" | "oz" | "liters">("glasses");
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // --- REWARD SYSTEM STATE ---
+  const [userProgress, setUserProgress] = useState<UserProgress>({
+    level: 1,
+    xp: 0,
+    totalMeals: 0,
+    totalWater: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    perfectDays: 0,
+    snacksLogged: 0,
+    daysAtGoal: 0,
+    unlockedAchievements: [],
+    lastLogDate: null
+  });
+  const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
+
   // --- PERSISTENCE ---
   useEffect(() => {
     // Load data from localStorage on mount
@@ -70,8 +92,29 @@ export default function Home() {
         if (parsed.waterUnit) setWaterUnit(parsed.waterUnit);
       } catch (e) { console.error("Failed to parse settings", e); }
     }
+
+    const savedProgress = localStorage.getItem('user_progress');
+    if (savedProgress) {
+      try {
+        setUserProgress(JSON.parse(savedProgress));
+      } catch (e) { console.error("Failed to parse progress", e); }
+    }
+
     setIsLoaded(true);
   }, []);
+
+  // Update streaks when history changes
+  useEffect(() => {
+    if (isLoaded && Object.keys(history).length > 0) {
+      const streaks = calculateStreak(history);
+      setUserProgress((prev: UserProgress) => ({
+        ...prev,
+        currentStreak: streaks.current,
+        longestStreak: Math.max(streaks.longest, prev.longestStreak),
+        totalWater: Object.values(history).reduce((sum, day) => sum + day.water, 0)
+      }));
+    }
+  }, [history, isLoaded]);
 
   useEffect(() => {
     if (isLoaded) {
@@ -94,6 +137,12 @@ export default function Home() {
       }));
     }
   }, [budget, trackingMode, weight, diet, enabledTools, profileName, profilePicture, waterGoal, waterUnit, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('user_progress', JSON.stringify(userProgress));
+    }
+  }, [userProgress, isLoaded]);
 
   const updateHistory = (type: "consumed" | "water", value: number) => {
     setHistory(prev => {
@@ -354,20 +403,36 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => updateHistory("water", -1)}
+              onClick={() => updateHistory("water", waterUnit === "liters" ? -0.1 : -1)}
               className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30"
             >
               -
             </button>
-            <span className="text-2xl font-bold w-6 text-center">{water}</span>
+            <span className="text-2xl font-bold w-12 text-center">{waterUnit === "liters" ? water.toFixed(1) : water}</span>
             <button
-              onClick={() => updateHistory("water", 1)}
+              onClick={() => updateHistory("water", waterUnit === "liters" ? 0.1 : 1)}
               className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-500 font-bold hover:bg-gray-50"
             >
               +
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Reward System */}
+      <div className="px-4 space-y-6 my-6">
+        <StreakRewards
+          currentStreak={userProgress.currentStreak}
+          longestStreak={userProgress.longestStreak}
+        />
+
+        <ProgressDashboard progress={userProgress} />
+
+        <RewardCalendar
+          history={history}
+          budget={budget}
+          onDateSelect={(date) => setCurrentDate(new Date(date))}
+        />
       </div>
 
       {/* TOOLS MOVED TO DASHBOARD */}
@@ -484,6 +549,12 @@ export default function Home() {
 
       {/* @ts-ignore - BottomNav types might need relaxation if we strictly check "tools" vs "dashboard" */}
       <BottomNav activeTab={activeTab as any} onTabChange={(tab) => setActiveTab(tab)} />
+
+      <AchievementPopup
+        achievement={newAchievement}
+        onClose={() => setNewAchievement(null)}
+      />
+
       <InstallPrompt />
     </main>
   );
