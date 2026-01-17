@@ -26,7 +26,7 @@ function MacroRing({ value, max, color, label }: { value: number; max: number; c
         <div className="flex flex-col items-center">
             <div className="relative w-16 h-16">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
-                    <circle cx="32" cy="32" r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
+                    <circle cx="32" cy="32" r={radius} fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="4" />
                     <circle
                         cx="32"
                         cy="32"
@@ -41,7 +41,7 @@ function MacroRing({ value, max, color, label }: { value: number; max: number; c
                     />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-sm font-bold">{Math.round(value)}</span>
+                    <span className="text-sm font-bold text-gray-800">{Math.round(value)}</span>
                 </div>
             </div>
             <span className="text-xs text-gray-500 mt-1">{label}</span>
@@ -51,10 +51,10 @@ function MacroRing({ value, max, color, label }: { value: number; max: number; c
 
 function MacroSummary({ totals }: { totals: MacroTotals }) {
     return (
-        <div className="glass-card p-5">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h3 className="text-2xl font-bold">{Math.round(totals.calories)}</h3>
+                    <h3 className="text-2xl font-bold text-gray-800">{Math.round(totals.calories)}</h3>
                     <p className="text-xs text-gray-500">Calories</p>
                 </div>
                 <div className="flex gap-3">
@@ -71,8 +71,8 @@ function MacroSummary({ totals }: { totals: MacroTotals }) {
                 ].map((m) => (
                     <div key={m.name} className="flex items-center gap-2">
                         <span className="text-xs w-4 text-gray-500">{m.name}</span>
-                        <div className="flex-1 macro-bar">
-                            <div className="macro-bar-fill" style={{ width: `${Math.min((m.value / m.max) * 100, 100)}%`, background: m.color }} />
+                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min((m.value / m.max) * 100, 100)}%`, background: m.color }} />
                         </div>
                         <span className="text-xs w-12 text-right text-gray-400">{m.value.toFixed(0)}g</span>
                     </div>
@@ -84,18 +84,18 @@ function MacroSummary({ totals }: { totals: MacroTotals }) {
 
 function FoodCard({ item, onRemove }: { item: FoodItem; onRemove: () => void }) {
     return (
-        <div className="glass-card p-3 flex items-center gap-3">
+        <div className="bg-white rounded-xl border border-gray-100 p-3 flex items-center gap-3 shadow-sm">
             <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-sm truncate">{item.name}</h4>
+                <h4 className="font-medium text-sm truncate text-gray-800">{item.name}</h4>
                 <p className="text-xs text-gray-500">{item.servingSize}</p>
             </div>
-            <div className="flex items-center gap-3 text-xs shrink-0">
-                <span className="text-emerald-400">{item.protein}g</span>
-                <span className="text-blue-400">{item.carbs}g</span>
-                <span className="text-amber-400">{item.fat}g</span>
-                <span className="font-semibold">{item.calories}</span>
+            <div className="flex items-center gap-3 text-xs shrink-0 font-medium">
+                <span className="text-emerald-500">{item.protein}g</span>
+                <span className="text-blue-500">{item.carbs}g</span>
+                <span className="text-amber-500">{item.fat}g</span>
+                <span className="font-bold text-gray-700">{item.calories}</span>
             </div>
-            <button onClick={onRemove} className="p-1.5 text-gray-500 hover:text-red-400">
+            <button onClick={onRemove} className="p-1.5 text-gray-400 hover:text-red-500">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -109,14 +109,14 @@ function RestaurantMenuModal({ restaurant, onAdd, onClose }: { restaurant: Resta
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content slide-up" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-handle" />
+            <div className="modal-content slide-up bg-white text-gray-800" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-handle bg-gray-200" />
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <span className="text-3xl">{restaurant.logo}</span>
                         <h3 className="text-lg font-bold">{restaurant.name}</h3>
                     </div>
-                    <button onClick={onClose} className="icon-btn">
+                    <button onClick={onClose} className="p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -126,22 +126,24 @@ function RestaurantMenuModal({ restaurant, onAdd, onClose }: { restaurant: Resta
                 <div className="space-y-4 max-h-[60vh] overflow-y-auto">
                     {categories.map((cat) => (
                         <div key={cat}>
-                            <h4 className="text-sm font-semibold text-gray-400 mb-2">{cat}</h4>
+                            <h4 className="text-sm font-semibold text-gray-500 mb-2">{cat}</h4>
                             <div className="space-y-2">
                                 {restaurant.items.filter((i) => i.category === cat).map((item, idx) => (
-                                    <button key={idx} onClick={() => onAdd(item)} className="w-full glass-card p-3 text-left hover:bg-white/5 flex items-center justify-between">
+                                    <button key={idx} onClick={() => onAdd(item)} className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-left hover:bg-slate-100 flex items-center justify-between transition-colors">
                                         <div>
-                                            <p className="font-medium text-sm">{item.name}</p>
+                                            <p className="font-medium text-sm text-gray-800">{item.name}</p>
                                             <div className="flex gap-2 mt-1 text-xs text-gray-500">
                                                 <span>{item.calories} cal</span>
-                                                <span className="text-emerald-400">{item.protein}g P</span>
-                                                <span className="text-blue-400">{item.carbs}g C</span>
-                                                <span className="text-amber-400">{item.fat}g F</span>
+                                                <span className="text-emerald-500 font-medium">{item.protein}g P</span>
+                                                <span className="text-blue-500 font-medium">{item.carbs}g C</span>
+                                                <span className="text-amber-500 font-medium">{item.fat}g F</span>
                                             </div>
                                         </div>
-                                        <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
+                                        <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm text-emerald-500">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                            </svg>
+                                        </div>
                                     </button>
                                 ))}
                             </div>
@@ -192,8 +194,8 @@ function CustomFoodModal({ food, onAdd, onClose }: { food: WholeFood; onAdd: (fo
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content slide-up" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-handle" />
+            <div className="modal-content slide-up bg-white text-gray-800" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-handle bg-gray-200" />
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <span className="text-3xl">{food.emoji}</span>
@@ -202,7 +204,7 @@ function CustomFoodModal({ food, onAdd, onClose }: { food: WholeFood; onAdd: (fo
                             <p className="text-xs text-gray-500">{food.category}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="icon-btn">
+                    <button onClick={onClose} className="p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -216,7 +218,7 @@ function CustomFoodModal({ food, onAdd, onClose }: { food: WholeFood; onAdd: (fo
                             <button
                                 key={s.name}
                                 onClick={() => { setSelectedServing(s.name); setWeight(""); }}
-                                className={`px-3 py-2 rounded-lg text-sm transition-all ${selectedServing === s.name ? "bg-emerald-500 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}
+                                className={`px-3 py-2 rounded-lg text-sm transition-all ${selectedServing === s.name ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
                             >
                                 {s.name}
                             </button>
@@ -227,8 +229,18 @@ function CustomFoodModal({ food, onAdd, onClose }: { food: WholeFood; onAdd: (fo
                 <div className="mb-4">
                     <label className="text-sm font-medium text-gray-400 mb-2 block">Or enter weight</label>
                     <div className="flex gap-2">
-                        <input type="number" value={weight} onChange={(e) => { setWeight(e.target.value); setSelectedServing(null); }} placeholder="Amount" className="flex-1" />
-                        <select value={unit} onChange={(e) => setUnit(e.target.value as typeof unit)} className="w-20">
+                        <input
+                            type="number"
+                            value={weight}
+                            onChange={(e) => { setWeight(e.target.value); setSelectedServing(null); }}
+                            placeholder="Amount"
+                            className="flex-1 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-4 py-2"
+                        />
+                        <select
+                            value={unit}
+                            onChange={(e) => setUnit(e.target.value as typeof unit)}
+                            className="w-20 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl"
+                        >
                             <option value="g">g</option>
                             <option value="oz">oz</option>
                             <option value="lbs">lbs</option>
@@ -237,15 +249,15 @@ function CustomFoodModal({ food, onAdd, onClose }: { food: WholeFood; onAdd: (fo
                     </div>
                 </div>
 
-                <div className="glass-card p-4 mb-4">
+                <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4 shadow-sm">
                     <div className="text-center mb-3">
-                        <span className="text-3xl font-bold text-emerald-400">{nutrition.calories}</span>
+                        <span className="text-3xl font-bold text-gray-800">{nutrition.calories}</span>
                         <span className="text-gray-500 ml-1">cal</span>
                     </div>
                     <div className="flex justify-around text-center">
-                        <div><div className="text-lg font-semibold text-emerald-400">{nutrition.protein}g</div><div className="text-xs text-gray-500">Protein</div></div>
-                        <div><div className="text-lg font-semibold text-blue-400">{nutrition.carbs}g</div><div className="text-xs text-gray-500">Carbs</div></div>
-                        <div><div className="text-lg font-semibold text-amber-400">{nutrition.fat}g</div><div className="text-xs text-gray-500">Fat</div></div>
+                        <div><div className="text-lg font-semibold text-emerald-500">{nutrition.protein}g</div><div className="text-xs text-gray-500">Protein</div></div>
+                        <div><div className="text-lg font-semibold text-blue-500">{nutrition.carbs}g</div><div className="text-xs text-gray-500">Carbs</div></div>
+                        <div><div className="text-lg font-semibold text-amber-500">{nutrition.fat}g</div><div className="text-xs text-gray-500">Fat</div></div>
                     </div>
                 </div>
 
@@ -332,18 +344,18 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
         <div className="container safe-top safe-bottom py-6 max-w-lg mx-auto space-y-4">
             {/* Header */}
             <div className="flex items-center gap-3">
-                <button onClick={onBack} className="icon-btn">
+                <button onClick={onBack} className="p-2 bg-gray-100 rounded-xl text-gray-600 hover:bg-gray-200">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
-                <h1 className="text-xl font-bold gradient-text">Meal Builder</h1>
+                <h1 className="text-xl font-bold text-gray-800">Meal Builder</h1>
             </div>
 
             <MacroSummary totals={totals} />
 
             {/* Tabs */}
-            <div className="tabs-container">
+            <div className="tabs-container bg-white border border-gray-100 shadow-sm">
                 {[
                     { id: "search", label: "🔍 Search" },
                     { id: "nearby", label: "📍 Nearby" },
@@ -351,7 +363,7 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
                     { id: "custom", label: "🥩 Foods" },
                     { id: "scan", label: "📷 Scan" },
                 ].map((tab) => (
-                    <button key={tab.id} onClick={() => { setActiveTab(tab.id as Tab); setSelectedCategory(null); }} className={`tab-button ${activeTab === tab.id ? "active" : ""}`}>
+                    <button key={tab.id} onClick={() => { setActiveTab(tab.id as Tab); setSelectedCategory(null); }} className={`tab-button ${activeTab === tab.id ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 hover:bg-gray-50"}`}>
                         {tab.label}
                     </button>
                 ))}
@@ -362,21 +374,21 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
                 {/* SEARCH TAB */}
                 {activeTab === "search" && (
                     <>
-                        <input type="text" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); handleSearch(e.target.value); }} placeholder="Search any food..." className="w-full mb-4" />
-                        {isSearching && <div className="flex justify-center py-8"><div className="spinner" /></div>}
+                        <input type="text" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); handleSearch(e.target.value); }} placeholder="Search any food..." className="w-full mb-4 bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400" />
+                        {isSearching && <div className="flex justify-center py-8"><div className="spinner !border-gray-200 !border-t-emerald-500" /></div>}
                         {searchResults.length > 0 && (
                             <div className="space-y-2 max-h-[300px] overflow-y-auto">
                                 {searchResults.map((food, i) => (
-                                    <button key={i} onClick={() => handleAddFood(food)} className="w-full glass-card p-3 text-left hover:bg-white/5 flex items-center gap-3">
+                                    <button key={i} onClick={() => handleAddFood(food)} className="w-full bg-white border border-gray-100 rounded-xl p-3 text-left hover:bg-gray-50 flex items-center gap-3 shadow-sm transition-colors">
                                         {food.image && <img src={food.image} alt="" className="w-10 h-10 rounded-lg object-cover" />}
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-sm truncate">{food.name}</p>
+                                            <p className="font-medium text-sm truncate text-gray-800">{food.name}</p>
                                             <div className="flex gap-2 text-xs text-gray-500">
                                                 <span>{food.calories} cal</span>
-                                                <span className="text-emerald-400">{food.protein}g P</span>
+                                                <span className="text-emerald-500">{food.protein}g P</span>
                                             </div>
                                         </div>
-                                        <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                         </svg>
                                     </button>
@@ -384,7 +396,7 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
                             </div>
                         )}
                         {!searchQuery && !isSearching && (
-                            <div className="text-center py-12 text-gray-500">
+                            <div className="text-center py-12 text-gray-400">
                                 <p className="text-4xl mb-3">🍽️</p>
                                 <p>Type to search foods from Open Food Facts</p>
                             </div>
@@ -402,13 +414,13 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
                 {/* RESTAURANT TAB */}
                 {activeTab === "restaurant" && (
                     <>
-                        <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Filter restaurants..." className="w-full mb-4" />
+                        <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Filter restaurants..." className="w-full mb-4 bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400" />
                         <div className="space-y-2 max-h-[400px] overflow-y-auto">
                             {RESTAURANTS.filter(r => !searchQuery || r.name.toLowerCase().includes(searchQuery.toLowerCase())).map((restaurant, i) => (
-                                <button key={i} onClick={() => setSelectedRestaurant(restaurant)} className="w-full restaurant-card p-4 text-left flex items-center gap-3" style={{ borderLeftColor: restaurant.color, borderLeftWidth: 3 }}>
+                                <button key={i} onClick={() => setSelectedRestaurant(restaurant)} className="w-full bg-white border border-gray-100 rounded-xl p-4 text-left flex items-center gap-3 shadow-sm hover:bg-gray-50" style={{ borderLeftColor: restaurant.color, borderLeftWidth: 3 }}>
                                     <span className="text-2xl">{restaurant.logo}</span>
                                     <div className="flex-1">
-                                        <p className="font-semibold">{restaurant.name}</p>
+                                        <p className="font-semibold text-gray-800">{restaurant.name}</p>
                                         <p className="text-xs text-gray-500">{restaurant.items.length} items</p>
                                     </div>
                                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -428,8 +440,8 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
                                 <p className="text-sm text-gray-400 mb-3">Choose a category:</p>
                                 <div className="grid grid-cols-2 gap-2">
                                     {FOOD_CATEGORIES.map((cat) => (
-                                        <button key={cat} onClick={() => setSelectedCategory(cat)} className="glass-card p-4 text-left hover:bg-white/5">
-                                            <p className="font-semibold">{cat}</p>
+                                        <button key={cat} onClick={() => setSelectedCategory(cat)} className="bg-white border border-gray-100 rounded-xl p-4 text-left hover:bg-gray-50 shadow-sm">
+                                            <p className="font-semibold text-gray-800">{cat}</p>
                                             <p className="text-xs text-gray-500">{WHOLE_FOODS.filter(f => f.category === cat).length} items</p>
                                         </button>
                                     ))}
@@ -437,22 +449,22 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
                             </>
                         ) : (
                             <>
-                                <button onClick={() => setSelectedCategory(null)} className="flex items-center gap-2 text-sm text-emerald-400 mb-3">
+                                <button onClick={() => setSelectedCategory(null)} className="flex items-center gap-2 text-sm text-emerald-500 mb-3 hover:underline">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                     </svg>
                                     Back to categories
                                 </button>
-                                <h3 className="font-semibold mb-3">{selectedCategory}</h3>
+                                <h3 className="font-semibold mb-3 text-gray-800">{selectedCategory}</h3>
                                 <div className="space-y-2 max-h-[350px] overflow-y-auto">
                                     {filteredWholeFoods.map((food, i) => (
-                                        <button key={i} onClick={() => setSelectedWholeFood(food)} className="w-full glass-card p-3 text-left hover:bg-white/5 flex items-center gap-3">
+                                        <button key={i} onClick={() => setSelectedWholeFood(food)} className="w-full bg-white border border-gray-100 rounded-xl p-3 text-left hover:bg-gray-50 flex items-center gap-3 shadow-sm">
                                             <span className="text-2xl w-10 text-center">{food.emoji}</span>
                                             <div className="flex-1">
-                                                <p className="font-medium text-sm">{food.name}</p>
+                                                <p className="font-medium text-sm text-gray-800">{food.name}</p>
                                                 <p className="text-xs text-gray-500">per 100g: {food.per100g.calories} cal • {food.per100g.protein}g P</p>
                                             </div>
-                                            <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                             </svg>
                                         </button>
@@ -466,16 +478,16 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
                 {/* BARCODE TAB */}
                 {activeTab === "scan" && (
                     <div className="space-y-4">
-                        <div className="glass-card p-6 text-center">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 flex items-center justify-center">
-                                <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center shadow-sm">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-blue-500/10 flex items-center justify-center">
+                                <svg className="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                                 </svg>
                             </div>
-                            <h3 className="font-semibold mb-1">Enter Barcode</h3>
+                            <h3 className="font-semibold mb-1 text-gray-800">Enter Barcode</h3>
                             <p className="text-sm text-gray-500 mb-4">Type the barcode number from the package</p>
                             <div className="flex gap-2">
-                                <input type="text" value={barcode} onChange={(e) => setBarcode(e.target.value)} placeholder="e.g., 012345678905" className="flex-1" onKeyDown={(e) => e.key === "Enter" && handleBarcodeSearch()} />
+                                <input type="text" value={barcode} onChange={(e) => setBarcode(e.target.value)} placeholder="e.g., 012345678905" className="flex-1 bg-gray-50 border-gray-200 text-gray-800" onKeyDown={(e) => e.key === "Enter" && handleBarcodeSearch()} />
                                 <button onClick={handleBarcodeSearch} disabled={!barcode || isSearching} className="btn btn-primary !w-auto !px-6">
                                     {isSearching ? "..." : "Add"}
                                 </button>
@@ -490,7 +502,7 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-gray-400">Added ({foods.length})</h3>
-                        <button onClick={() => setFoods([])} className="text-xs text-red-400 hover:text-red-300">Clear</button>
+                        <button onClick={() => setFoods([])} className="text-xs text-red-500 hover:text-red-400">Clear</button>
                     </div>
                     {foods.map((food) => (
                         <FoodCard key={food.id} item={food} onRemove={() => setFoods((p) => p.filter((f) => f.id !== food.id))} />
@@ -502,7 +514,7 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
             {selectedRestaurant && <RestaurantMenuModal restaurant={selectedRestaurant} onAdd={handleAddMenuItem} onClose={() => setSelectedRestaurant(null)} />}
             {selectedWholeFood && <CustomFoodModal food={selectedWholeFood} onAdd={(food) => { setFoods((prev) => [...prev, food]); setSelectedWholeFood(null); }} onClose={() => setSelectedWholeFood(null)} />}
 
-            <p className="text-xs text-center text-gray-600 pt-4">Data: Open Food Facts • {RESTAURANTS.length} Restaurants • {WHOLE_FOODS.length}+ Whole Foods</p>
+            <p className="text-xs text-center text-gray-500 pt-4">Data: Open Food Facts • {RESTAURANTS.length} Restaurants • {WHOLE_FOODS.length}+ Whole Foods</p>
         </div>
     );
 }
