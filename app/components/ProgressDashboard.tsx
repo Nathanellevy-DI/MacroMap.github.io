@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { UserProgress, ACHIEVEMENTS, getXPProgressInLevel } from "../lib/achievements";
 
 interface ProgressDashboardProps {
@@ -10,10 +11,20 @@ export default function ProgressDashboard({ progress }: ProgressDashboardProps) 
     const { current, needed } = getXPProgressInLevel(progress.xp, progress.level);
     const xpPercentage = (current / needed) * 100;
 
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [filter, setFilter] = useState<"all" | "unlocked" | "locked">("all");
+
     const recentAchievements = progress.unlockedAchievements
         .slice(-3)
         .map(id => ACHIEVEMENTS.find(a => a.id === id))
         .filter(Boolean);
+
+    const filteredAchievements = ACHIEVEMENTS.filter(achievement => {
+        const unlocked = progress.unlockedAchievements.includes(achievement.id);
+        if (filter === "unlocked") return unlocked;
+        if (filter === "locked") return !unlocked;
+        return true;
+    });
 
     return (
         <div className="space-y-4">
@@ -79,27 +90,55 @@ export default function ProgressDashboard({ progress }: ProgressDashboardProps) 
 
             {/* All Achievements */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                <h3 className="font-bold text-gray-800 mb-4">All Achievements ({progress.unlockedAchievements.length}/{ACHIEVEMENTS.length})</h3>
-                <div className="grid grid-cols-4 gap-3">
-                    {ACHIEVEMENTS.map(achievement => {
-                        const unlocked = progress.unlockedAchievements.includes(achievement.id);
-                        return (
-                            <div
-                                key={achievement.id}
-                                className={`aspect-square rounded-xl flex flex-col items-center justify-center p-2 transition-all ${unlocked
-                                    ? 'bg-gradient-to-br from-yellow-100 to-orange-100 border-2 border-yellow-300'
-                                    : 'bg-gray-50 border border-gray-200 opacity-40'
-                                    }`}
-                                title={achievement.description}
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-gray-800 px-2">All Achievements ({progress.unlockedAchievements.length}/{ACHIEVEMENTS.length})</h3>
+                    <div className="flex items-center gap-2">
+                        <select
+                            value={filter}
+                            onChange={(e) => setFilter(e.target.value as "all" | "unlocked" | "locked")}
+                            className="text-xs bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 font-medium"
+                        >
+                            <option value="all">All</option>
+                            <option value="unlocked">Unlocked</option>
+                            <option value="locked">Locked</option>
+                        </select>
+                        <button
+                            onClick={() => setIsCollapsed(!isCollapsed)}
+                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                            <svg
+                                className={`w-5 h-5 text-gray-600 transition-transform ${isCollapsed ? '' : 'rotate-180'}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
                             >
-                                <span className="text-2xl mb-1">{achievement.icon}</span>
-                                <span className="text-[10px] text-center leading-tight text-gray-700 font-medium">
-                                    {achievement.name.replace(/[🔥🌟⭐💎✅📅🥗💧🎯👑]/g, '').trim()}
-                                </span>
-                            </div>
-                        );
-                    })}
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
+                {!isCollapsed && (
+                    <div className="grid grid-cols-4 gap-3">
+                        {filteredAchievements.map(achievement => {
+                            const unlocked = progress.unlockedAchievements.includes(achievement.id);
+                            return (
+                                <div
+                                    key={achievement.id}
+                                    className={`aspect-square rounded-xl flex flex-col items-center justify-center p-2 transition-all ${unlocked
+                                        ? 'bg-gradient-to-br from-yellow-100 to-orange-100 border-2 border-yellow-300'
+                                        : 'bg-gray-50 border border-gray-200 opacity-40'
+                                        }`}
+                                    title={achievement.description}
+                                >
+                                    <span className="text-2xl mb-1">{achievement.icon}</span>
+                                    <span className="text-[10px] text-center leading-tight text-gray-700 font-medium">
+                                        {achievement.name.replace(/[🔥🌟⭐💎✅📅🥗💧🎯👑]/g, '').trim()}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     );
