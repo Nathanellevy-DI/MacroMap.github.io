@@ -1,52 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Scanner from "./components/Scanner";
 import Results from "./components/Results";
-import SettingsModal from "./components/SettingsModal";
 import MealBuilder from "./components/MealBuilder";
-import { AnalysisResult } from "./types";
-import { analyzeImage, getApiKey } from "./lib/api";
+import { analyzeIngredients } from "./lib/ingredients-db";
 
 type AppMode = "home" | "scanner" | "results" | "meal-builder";
+
+interface AnalysisResult {
+  score: number;
+  redFlags: {
+    name: string;
+    risk: string;
+    euStatus: string;
+    foundAs: string;
+  }[];
+  allIngredients: string[];
+}
 
 export default function Home() {
   const [mode, setMode] = useState<AppMode>("home");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState(false);
 
-  useEffect(() => {
-    setHasApiKey(!!getApiKey());
-  }, [showSettings]);
-
-  const handleCapture = async (imageData: string) => {
-    const apiKey = getApiKey();
-
-    if (!apiKey) {
-      setShowSettings(true);
-      return;
-    }
-
+  const handleAnalyze = (text: string) => {
     setIsLoading(true);
-    setError(null);
 
-    try {
-      const data = await analyzeImage(imageData, apiKey);
-      setResult(data);
+    // Use local database - instant analysis, no API needed
+    setTimeout(() => {
+      const analysis = analyzeIngredients(text);
+      setResult({
+        score: analysis.score,
+        redFlags: analysis.redFlags,
+        allIngredients: analysis.allIngredients,
+      });
       setMode("results");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
       setIsLoading(false);
-    }
+    }, 500); // Small delay for UX
   };
 
   const handleReset = () => {
     setResult(null);
-    setError(null);
     setMode("home");
   };
 
@@ -54,11 +49,7 @@ export default function Home() {
   if (mode === "meal-builder") {
     return (
       <main className="min-h-screen px-4 py-8 pb-24">
-        <MealBuilder
-          onBack={() => setMode("home")}
-          onOpenSettings={() => setShowSettings(true)}
-        />
-        <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+        <MealBuilder onBack={() => setMode("home")} />
       </main>
     );
   }
@@ -67,8 +58,12 @@ export default function Home() {
   if (mode === "results" && result) {
     return (
       <main className="min-h-screen px-4 py-8 pb-24">
-        <Results result={result} onReset={handleReset} />
-        <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+        <Results
+          score={result.score}
+          redFlags={result.redFlags}
+          allIngredients={result.allIngredients}
+          onReset={handleReset}
+        />
       </main>
     );
   }
@@ -78,42 +73,22 @@ export default function Home() {
     <main className="min-h-screen px-4 py-8 pb-24">
       {/* Header */}
       <header className="max-w-lg mx-auto mb-10 fade-in">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold gradient-text">MacroMap</h1>
-              <p className="text-xs text-gray-500">Food Intelligence</p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setShowSettings(true)}
-            className="icon-btn"
-            title="Settings"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-          </button>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold gradient-text">MacroMap</h1>
+            <p className="text-xs text-gray-500">Food Intelligence</p>
+          </div>
         </div>
 
-        {!hasApiKey && (
-          <button
-            onClick={() => setShowSettings(true)}
-            className="warning-banner w-full flex items-center justify-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            Add API Key to Enable Features
-          </button>
-        )}
+        <p className="text-gray-400 text-sm text-center">
+          Check ingredients & track macros<br />
+          <span className="text-emerald-400">No API key required</span>
+        </p>
       </header>
 
       {/* Feature Cards */}
@@ -141,6 +116,9 @@ export default function Home() {
                 <span className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-400">
                   EU vs US
                 </span>
+                <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400">
+                  No API
+                </span>
               </div>
             </div>
             <svg className="w-5 h-5 text-gray-500 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +141,7 @@ export default function Home() {
             <div className="flex-1">
               <h3 className="font-semibold text-lg mb-1">Meal Builder</h3>
               <p className="text-sm text-gray-400">
-                Track macros while cooking by scanning food packages
+                Track macros by searching foods from Open Food Facts
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
                 <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400">
@@ -200,16 +178,10 @@ export default function Home() {
 
               <h2 className="text-xl font-bold gradient-text text-center mb-2">Ingredient Scanner</h2>
               <p className="text-gray-400 text-sm text-center mb-8">
-                Scan ingredients to check for <span className="text-red-400">EU-banned</span> substances
+                Paste ingredients to check for <span className="text-red-400">EU-banned</span> substances
               </p>
 
-              <Scanner onCapture={handleCapture} isLoading={isLoading} />
-
-              {error && (
-                <div className="mt-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
-                  {error}
-                </div>
-              )}
+              <Scanner onAnalyze={handleAnalyze} isLoading={isLoading} />
             </div>
           </div>
         </div>
@@ -217,11 +189,8 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="fixed bottom-0 left-0 right-0 py-4 text-center text-xs text-gray-600 bg-gradient-to-t from-black via-black/80 to-transparent">
-        <p>EU 2026 food safety data • Your API key stays local</p>
+        <p>EU 2026 data • Open Food Facts • No API key needed</p>
       </footer>
-
-      {/* Settings Modal */}
-      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </main>
   );
 }

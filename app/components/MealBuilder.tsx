@@ -2,16 +2,13 @@
 
 import { useState, useRef, useCallback } from "react";
 import { FoodItem, MacroTotals } from "../types";
-import { analyzeMacros, getApiKey } from "../lib/api";
+import { searchFood, NutritionData, findCommonFood } from "../lib/food-api";
 
 interface MealBuilderProps {
     onBack: () => void;
-    onOpenSettings: () => void;
 }
 
 function MacroChart({ totals }: { totals: MacroTotals }) {
-    const maxMacro = Math.max(totals.protein, totals.carbs, totals.fat, 1);
-
     const macros = [
         { name: "Protein", value: totals.protein, color: "#22c55e", goal: 150 },
         { name: "Carbs", value: totals.carbs, color: "#3b82f6", goal: 250 },
@@ -23,7 +20,7 @@ function MacroChart({ totals }: { totals: MacroTotals }) {
             <div className="flex items-center justify-between mb-6">
                 <h3 className="font-semibold">Macro Breakdown</h3>
                 <div className="text-right">
-                    <div className="text-2xl font-bold text-emerald-400">{totals.calories}</div>
+                    <div className="text-2xl font-bold text-emerald-400">{Math.round(totals.calories)}</div>
                     <div className="text-xs text-gray-500">calories</div>
                 </div>
             </div>
@@ -98,7 +95,7 @@ function MacroChart({ totals }: { totals: MacroTotals }) {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-xs text-gray-500">Total</span>
-                        <span className="text-lg font-bold">{totals.calories}</span>
+                        <span className="text-lg font-bold">{Math.round(totals.calories)}</span>
                     </div>
                 </div>
             </div>
@@ -149,11 +146,41 @@ function FoodItemCard({ item, onRemove }: { item: FoodItem; onRemove: () => void
     );
 }
 
-export default function MealBuilder({ onBack, onOpenSettings }: MealBuilderProps) {
+function SearchResultCard({ food, onAdd }: { food: NutritionData; onAdd: () => void }) {
+    return (
+        <button
+            onClick={onAdd}
+            className="w-full glass-card p-4 text-left hover:bg-white/5 transition-colors"
+        >
+            <div className="flex items-center gap-3">
+                {food.image && (
+                    <img src={food.image} alt={food.name} className="w-12 h-12 rounded-lg object-cover" />
+                )}
+                <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-sm truncate">{food.name}</h4>
+                    {food.brand && <p className="text-xs text-gray-500 truncate">{food.brand}</p>}
+                    <div className="flex gap-2 mt-1 text-xs">
+                        <span className="text-gray-400">{food.calories} cal</span>
+                        <span className="text-emerald-400">{food.protein}g P</span>
+                        <span className="text-blue-400">{food.carbs}g C</span>
+                        <span className="text-amber-400">{food.fat}g F</span>
+                    </div>
+                </div>
+                <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+            </div>
+        </button>
+    );
+}
+
+export default function MealBuilder({ onBack }: MealBuilderProps) {
     const [foods, setFoods] = useState<FoodItem[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<NutritionData[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showSearch, setShowSearch] = useState(false);
+    const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
     const totals: MacroTotals = foods.reduce(
         (acc, food) => ({
@@ -167,59 +194,63 @@ export default function MealBuilder({ onBack, onOpenSettings }: MealBuilderProps
         { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0 }
     );
 
-    const handleAddFood = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    const handleSearch = useCallback(async (query: string) => {
+        setSearchQuery(query);
 
-        const apiKey = getApiKey();
-        if (!apiKey) {
-            onOpenSettings();
+        if (searchTimeout.current) {
+            clearTimeout(searchTimeout.current);
+        }
+
+        if (query.length < 2) {
+            setSearchResults([]);
             return;
         }
 
-        setIsLoading(true);
-        setError(null);
+        searchTimeout.current = setTimeout(async () => {
+            setIsSearching(true);
+            try {
+                // First check common foods
+                const commonFood = findCommonFood(query);
 
-        try {
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                try {
-                    const base64 = reader.result as string;
-                    const result = await analyzeMacros(base64, apiKey);
+                // Then search Open Food Facts
+                const apiResults = await searchFood(query);
 
-                    const newFood: FoodItem = {
-                        id: Date.now().toString(),
-                        name: result.food_item.name,
-                        brand: result.food_item.brand || undefined,
-                        servingSize: result.food_item.serving_size,
-                        calories: result.food_item.calories,
-                        protein: result.food_item.protein,
-                        carbs: result.food_item.carbs,
-                        fat: result.food_item.fat,
-                        fiber: result.food_item.fiber,
-                        sugar: result.food_item.sugar,
-                        sodium: result.food_item.sodium,
-                        timestamp: Date.now(),
-                    };
-
-                    setFoods((prev) => [...prev, newFood]);
-                } catch (err) {
-                    setError(err instanceof Error ? err.message : "Failed to analyze food");
-                } finally {
-                    setIsLoading(false);
+                const results = commonFood ? [commonFood, ...apiResults] : apiResults;
+                setSearchResults(results);
+            } catch (error) {
+                console.error("Search error:", error);
+                // Fallback to common foods only
+                const commonFood = findCommonFood(query);
+                if (commonFood) {
+                    setSearchResults([commonFood]);
                 }
-            };
-            reader.readAsDataURL(file);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to read file");
-            setIsLoading(false);
-        }
+            } finally {
+                setIsSearching(false);
+            }
+        }, 300);
+    }, []);
 
-        // Reset input
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-    }, [onOpenSettings]);
+    const handleAddFood = (food: NutritionData) => {
+        const newFood: FoodItem = {
+            id: Date.now().toString(),
+            name: food.name,
+            brand: food.brand,
+            servingSize: food.servingSize,
+            calories: food.calories,
+            protein: food.protein,
+            carbs: food.carbs,
+            fat: food.fat,
+            fiber: food.fiber,
+            sugar: food.sugar,
+            sodium: food.sodium,
+            timestamp: Date.now(),
+        };
+
+        setFoods((prev) => [...prev, newFood]);
+        setSearchQuery("");
+        setSearchResults([]);
+        setShowSearch(false);
+    };
 
     const handleRemoveFood = (id: string) => {
         setFoods((prev) => prev.filter((f) => f.id !== id));
@@ -233,66 +264,85 @@ export default function MealBuilder({ onBack, onOpenSettings }: MealBuilderProps
         <div className="max-w-lg mx-auto space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <button
-                    onClick={onBack}
-                    className="icon-btn"
-                >
+                <button onClick={onBack} className="icon-btn">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
                 <h2 className="text-xl font-bold gradient-text">Meal Builder</h2>
-                <button
-                    onClick={onOpenSettings}
-                    className="icon-btn"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                </button>
+                <div className="w-10" /> {/* Spacer */}
             </div>
 
             <p className="text-center text-gray-400 text-sm">
-                Scan food labels while cooking to track your meal&apos;s macros
+                Search foods to track your meal&apos;s macros
             </p>
 
             {/* Macro Chart */}
             <MacroChart totals={totals} />
 
-            {/* Add Food Button */}
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleAddFood}
-                className="hidden"
-            />
-
-            <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-                className="btn-primary w-full pulse-glow"
-            >
-                {isLoading ? (
-                    <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Analyzing...
-                    </>
-                ) : (
-                    <>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            {/* Search / Add Food */}
+            {!showSearch ? (
+                <button
+                    onClick={() => setShowSearch(true)}
+                    className="btn-primary w-full pulse-glow"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Search Food
+                </button>
+            ) : (
+                <div className="space-y-3">
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => handleSearch(e.target.value)}
+                            placeholder="Search foods (e.g., chicken, rice, banana)..."
+                            autoFocus
+                            className="w-full px-4 py-3 pl-11 rounded-xl bg-gray-900 border border-gray-700 focus:border-emerald-500 focus:outline-none text-white placeholder-gray-500"
+                        />
+                        <svg className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                        Add Food Item
-                    </>
-                )}
-            </button>
+                        <button
+                            onClick={() => {
+                                setShowSearch(false);
+                                setSearchQuery("");
+                                setSearchResults([]);
+                            }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
 
-            {error && (
-                <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
-                    {error}
+                    {isSearching && (
+                        <div className="flex items-center justify-center gap-2 py-4">
+                            <div className="w-5 h-5 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+                            <span className="text-sm text-gray-400">Searching...</span>
+                        </div>
+                    )}
+
+                    {searchResults.length > 0 && (
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                            {searchResults.map((food, i) => (
+                                <SearchResultCard
+                                    key={`${food.name}-${i}`}
+                                    food={food}
+                                    onAdd={() => handleAddFood(food)}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    {searchQuery.length >= 2 && !isSearching && searchResults.length === 0 && (
+                        <p className="text-center text-gray-500 text-sm py-4">
+                            No results found. Try a different search term.
+                        </p>
+                    )}
                 </div>
             )}
 
@@ -321,7 +371,7 @@ export default function MealBuilder({ onBack, onOpenSettings }: MealBuilderProps
             )}
 
             {/* Empty State */}
-            {foods.length === 0 && !isLoading && (
+            {foods.length === 0 && !showSearch && (
                 <div className="glass-card p-8 text-center">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 flex items-center justify-center">
                         <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,10 +380,15 @@ export default function MealBuilder({ onBack, onOpenSettings }: MealBuilderProps
                     </div>
                     <h4 className="font-medium mb-1">Start Building Your Meal</h4>
                     <p className="text-sm text-gray-500">
-                        Scan nutrition labels or whole foods to track macros
+                        Search for foods to track nutrition - no API key needed!
                     </p>
                 </div>
             )}
+
+            {/* Data Source Note */}
+            <p className="text-xs text-center text-gray-600">
+                Powered by Open Food Facts • Free & Open Data
+            </p>
         </div>
     );
 }

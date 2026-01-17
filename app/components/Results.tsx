@@ -1,9 +1,16 @@
 "use client";
 
-import { AnalysisResult } from "../types";
+interface RedFlag {
+    name: string;
+    risk: string;
+    euStatus: string;
+    foundAs: string;
+}
 
 interface ResultsProps {
-    result: AnalysisResult;
+    score: number;
+    redFlags: RedFlag[];
+    allIngredients: string[];
     onReset: () => void;
 }
 
@@ -58,9 +65,7 @@ function ScoreRing({ score }: { score: number }) {
     );
 }
 
-export default function Results({ result, onReset }: ResultsProps) {
-    const { score, red_flags, reformulation_note, all_ingredients } = result;
-
+export default function Results({ score, redFlags, allIngredients, onReset }: ResultsProps) {
     return (
         <div className="w-full max-w-lg mx-auto space-y-6 fade-in">
             {/* Score Section */}
@@ -77,33 +82,31 @@ export default function Results({ result, onReset }: ResultsProps) {
             </div>
 
             {/* Red Flags */}
-            {red_flags.length > 0 && (
+            {redFlags.length > 0 && (
                 <div className="space-y-4">
                     <h3 className="text-lg font-semibold flex items-center gap-3">
                         <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
-                        Red Flags ({red_flags.length})
+                        Red Flags ({redFlags.length})
                     </h3>
-                    {red_flags.map((flag, index) => (
+                    {redFlags.map((flag, index) => (
                         <div key={index} className="red-flag-card fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                             <div className="flex justify-between items-start mb-3">
                                 <h4 className="font-semibold text-red-400 text-lg">{flag.name}</h4>
                                 <span className="text-xs px-3 py-1.5 rounded-full bg-red-500/20 text-red-400 font-medium">
-                                    {flag.eu_status}
+                                    {flag.euStatus}
                                 </span>
                             </div>
                             <p className="text-sm text-gray-300 leading-relaxed">{flag.risk}</p>
-                            {flag.alias && (
-                                <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-red-500/10">
-                                    Found on label as: <span className="text-gray-400 font-medium">&quot;{flag.alias}&quot;</span>
-                                </p>
-                            )}
+                            <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-red-500/10">
+                                Found as: <span className="text-gray-400 font-medium">&quot;{flag.foundAs}&quot;</span>
+                            </p>
                         </div>
                     ))}
                 </div>
             )}
 
             {/* All Clear */}
-            {red_flags.length === 0 && (
+            {redFlags.length === 0 && (
                 <div className="safe-card flex items-center gap-5">
                     <div className="w-14 h-14 rounded-2xl bg-green-500/20 flex items-center justify-center shrink-0">
                         <svg className="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,27 +120,14 @@ export default function Results({ result, onReset }: ResultsProps) {
                 </div>
             )}
 
-            {/* Reformulation Note */}
-            {reformulation_note && (
-                <div className="glass-card p-5">
-                    <h3 className="text-sm font-semibold text-emerald-400 mb-2 flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        EU Reformulation
-                    </h3>
-                    <p className="text-sm text-gray-300 leading-relaxed">{reformulation_note}</p>
-                </div>
-            )}
-
             {/* All Ingredients */}
-            {all_ingredients && all_ingredients.length > 0 && (
+            {allIngredients.length > 0 && (
                 <div className="glass-card p-5">
-                    <h3 className="text-sm font-semibold text-gray-400 mb-4">All Ingredients ({all_ingredients.length})</h3>
+                    <h3 className="text-sm font-semibold text-gray-400 mb-4">All Ingredients ({allIngredients.length})</h3>
                     <div className="flex flex-wrap gap-2">
-                        {all_ingredients.map((ingredient, index) => {
-                            const isFlagged = red_flags.some(
-                                (f) => f.name.toLowerCase() === ingredient.toLowerCase()
+                        {allIngredients.map((ingredient, index) => {
+                            const isFlagged = redFlags.some(
+                                (f) => ingredient.toLowerCase().includes(f.foundAs.toLowerCase())
                             );
                             return (
                                 <span
@@ -162,8 +152,13 @@ export default function Results({ result, onReset }: ResultsProps) {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                Scan Another Product
+                Analyze Another Product
             </button>
+
+            {/* Data Source */}
+            <p className="text-xs text-center text-gray-600">
+                Based on EU 2026 food safety regulations
+            </p>
         </div>
     );
 }
