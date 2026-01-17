@@ -5,12 +5,13 @@ import { FoodItem, MacroTotals } from "../types";
 import { searchFood, NutritionData, findCommonFood, getProductByBarcode } from "../lib/food-api";
 import { searchRestaurants, MenuItem, Restaurant, RESTAURANTS } from "../lib/restaurants";
 import { searchWholeFoods, WholeFood, calculateNutrition, lbsToGrams, kgToGrams, ozToGrams, WHOLE_FOODS } from "../lib/whole-foods";
+import NearbyRestaurants from "./NearbyRestaurants";
 
 interface MealBuilderProps {
     onBack: () => void;
 }
 
-type Tab = "search" | "restaurant" | "custom" | "scan";
+type Tab = "search" | "restaurant" | "nearby" | "custom" | "scan";
 
 // Get unique categories from whole foods
 const FOOD_CATEGORIES = [...new Set(WHOLE_FOODS.map(f => f.category))];
@@ -345,9 +346,10 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
             <div className="tabs-container">
                 {[
                     { id: "search", label: "🔍 Search" },
-                    { id: "restaurant", label: "🍔 Restaurant" },
-                    { id: "custom", label: "🥩 Whole Foods" },
-                    { id: "scan", label: "📷 Barcode" },
+                    { id: "nearby", label: "📍 Nearby" },
+                    { id: "restaurant", label: "🍔 Chains" },
+                    { id: "custom", label: "🥩 Foods" },
+                    { id: "scan", label: "📷 Scan" },
                 ].map((tab) => (
                     <button key={tab.id} onClick={() => { setActiveTab(tab.id as Tab); setSelectedCategory(null); }} className={`tab-button ${activeTab === tab.id ? "active" : ""}`}>
                         {tab.label}
@@ -388,6 +390,13 @@ export default function MealBuilder({ onBack }: MealBuilderProps) {
                             </div>
                         )}
                     </>
+                )}
+
+                {/* NEARBY TAB */}
+                {activeTab === "nearby" && (
+                    <NearbyRestaurants
+                        onSelectRestaurant={(restaurant) => setSelectedRestaurant(restaurant)}
+                    />
                 )}
 
                 {/* RESTAURANT TAB */}
