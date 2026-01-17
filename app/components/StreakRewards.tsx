@@ -40,8 +40,8 @@ export default function StreakRewards({ currentStreak, longestStreak }: StreakRe
     }
 
     return (
-        <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl p-6 text-white shadow-lg">
-            <div className="text-center mb-4">
+        <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl p-8 text-white shadow-lg">
+            <div className="text-center mb-4 px-4">
                 <div className={`${getFlameSize()} mb-2 animate-pulse`}>
                     {getFlameCount()}
                 </div>
@@ -50,7 +50,7 @@ export default function StreakRewards({ currentStreak, longestStreak }: StreakRe
             </div>
 
             {currentStreak < 100 && (
-                <div className="mt-4">
+                <div className="mt-4 px-4">
                     <div className="flex items-center justify-between text-xs mb-2">
                         <span>Next reward: {nextMilestone} days</span>
                         <span>{nextMilestone - currentStreak} to go</span>
@@ -65,14 +65,14 @@ export default function StreakRewards({ currentStreak, longestStreak }: StreakRe
             )}
 
             {currentStreak >= 100 && (
-                <div className="mt-4 text-center">
+                <div className="mt-4 text-center px-4">
                     <div className="text-4xl mb-2">👑</div>
                     <p className="text-sm font-semibold">LEGENDARY STATUS!</p>
                 </div>
             )}
 
             {longestStreak > currentStreak && (
-                <div className="mt-4 pt-4 border-t border-white/20 text-center text-xs opacity-75">
+                <div className="mt-4 pt-4 border-t border-white/20 text-center text-xs opacity-75 px-4">
                     🏆 Your best: {longestStreak} days
                 </div>
             )}

@@ -299,9 +299,9 @@ export default function Home() {
   };
 
   const renderDashboard = () => (
-    <div className="space-y-6 pb-24 animate-in fade-in duration-500">
+    <div className="space-y-6 pb-24 px-4 animate-in fade-in duration-500">
       {/* Date Header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-white sticky top-0 z-10 shadow-sm">
+      <div className="flex items-center justify-between py-2 bg-white sticky top-0 z-10 shadow-sm -mx-4 px-4">
         <button onClick={() => handleDateChange(-1)} className="text-emerald-500 p-2 hover:bg-emerald-50 rounded-full">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         </button>
@@ -395,7 +395,7 @@ export default function Home() {
       </div>
 
       {/* Water Tracker */}
-      <div className="px-4">
+      <div>
         <div className="bg-blue-500 rounded-3xl p-8 text-white shadow-lg shadow-blue-500/20 flex items-center justify-between">
           <div className="flex-1">
             <h3 className="font-bold text-lg mb-1 ml-2">Water</h3>
@@ -420,7 +420,7 @@ export default function Home() {
       </div>
 
       {/* Reward System */}
-      <div className="px-4 space-y-6 my-6">
+      <div className="space-y-6 my-6">
         <StreakRewards
           currentStreak={userProgress.currentStreak}
           longestStreak={userProgress.longestStreak}
@@ -487,7 +487,7 @@ export default function Home() {
   );
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800">
+    <main className="min-h-screen bg-slate-50 text-slate-800 pt-12 pb-24 px-2" style={{ paddingTop: 'max(48px, env(safe-area-inset-top))' }}>
       {/* Full Screen Overlays for Tools */}
       {selectedTool === "scanner" && (
         <div className="fixed inset-0 z-[100] bg-black">
