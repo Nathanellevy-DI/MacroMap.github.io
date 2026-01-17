@@ -3,11 +3,13 @@
 import { useState } from "react";
 
 interface ScannerProps {
-    onAnalyze: (text: string) => void;
+    onAnalyze: (foods: string[]) => void;
     isLoading: boolean;
+    onBack?: () => void;
+    onScan?: (data: any) => void;
 }
 
-export default function Scanner({ onAnalyze, isLoading }: ScannerProps) {
+export default function Scanner({ onAnalyze, isLoading, onBack }: ScannerProps) {
     const [ingredientText, setIngredientText] = useState("");
     const [showInput, setShowInput] = useState(false);
     const [isScanning, setIsScanning] = useState(false);
@@ -16,7 +18,8 @@ export default function Scanner({ onAnalyze, isLoading }: ScannerProps) {
         if (ingredientText.trim()) {
             setIsScanning(true);
             setTimeout(() => {
-                onAnalyze(ingredientText);
+                // Fix: Pass array of strings, split by comma or just pass single item as array
+                onAnalyze(ingredientText.split(",").map(i => i.trim()).filter(Boolean));
                 setIsScanning(false);
             }, 1200);
         }

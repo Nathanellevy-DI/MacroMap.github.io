@@ -1,17 +1,42 @@
 interface MeSectionProps {
     budget: number;
     setBudget: (budget: number) => void;
-    trackingMode: "budget" | "tracking";
-    setTrackingMode: (mode: "budget" | "tracking") => void;
+    trackingMode: "cut" | "maintain" | "bulk" | "no-tracking";
+    setTrackingMode: (mode: "cut" | "maintain" | "bulk" | "no-tracking") => void;
+    weight: number;
+    setWeight: (weight: number) => void;
+    diet: string | null;
+    setDiet: (diet: string | null) => void;
 }
 
-export default function MeSection({ budget, setBudget, trackingMode, setTrackingMode }: MeSectionProps) {
+export default function MeSection({
+    budget, setBudget,
+    trackingMode, setTrackingMode,
+    weight, setWeight,
+    diet, setDiet
+}: MeSectionProps) {
     const handleGoalClick = () => {
         const newGoal = prompt("Enter your daily calorie goal:", budget.toString());
         if (newGoal && !isNaN(Number(newGoal))) {
             setBudget(Number(newGoal));
         }
     };
+
+    const handleWeightClick = () => {
+        const newWeight = prompt("Enter current weight (lbs):", weight.toString());
+        if (newWeight && !isNaN(Number(newWeight))) {
+            setWeight(Number(newWeight));
+        }
+    };
+
+    const handleDietClick = () => {
+        const diets = ["None", "Vegan", "Vegetarian", "Keto", "Paleo", "Intermittent Fasting"];
+        const currentIdx = diets.indexOf(diet || "None");
+        const nextDiet = diets[(currentIdx + 1) % diets.length];
+        setDiet(nextDiet === "None" ? null : nextDiet);
+    };
+
+
 
     return (
         <div className="pb-24 animate-in fade-in duration-500">
@@ -42,9 +67,9 @@ export default function MeSection({ budget, setBudget, trackingMode, setTracking
                             <p className="text-2xl font-bold">0</p>
                             <p className="text-xs text-emerald-100">Meals</p>
                         </div>
-                        <div className="bg-white/10 rounded-2xl p-3">
-                            <p className="text-2xl font-bold">0</p>
-                            <p className="text-xs text-emerald-100">lbs lost</p>
+                        <div className="bg-white/10 rounded-2xl p-3" onClick={handleWeightClick}>
+                            <p className="text-2xl font-bold">{weight}</p>
+                            <p className="text-xs text-emerald-100">lbs (Tap to Edit)</p>
                         </div>
                     </div>
                 </div>
@@ -61,23 +86,40 @@ export default function MeSection({ budget, setBudget, trackingMode, setTracking
                         <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </button>
 
-                    {/* Mode Toggle */}
-                    <button
-                        onClick={() => setTrackingMode(trackingMode === "budget" ? "tracking" : "budget")}
-                        className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors"
-                    >
+                    {/* Diet Preference */}
+                    <button onClick={handleDietClick} className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors">
+                        <span className="text-xl">🍎</span>
+                        <span className="flex-1 text-left font-medium text-gray-800">Diet Preference</span>
+                        <span className="text-emerald-500 font-bold">{diet || "None"}</span>
+                        <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+
+                    {/* Mode Selection Dropdown */}
+                    <div className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors relative">
                         <span className="text-xl">📊</span>
                         <div className="flex-1 text-left">
                             <span className="block font-medium text-gray-800">Tracking Mode</span>
-                            <span className="text-xs text-gray-400">{trackingMode === "budget" ? "Strict Budget Limit" : "Count Only (No Limit)"}</span>
+                            <span className="text-xs text-gray-400">Current Strategy</span>
                         </div>
-                        <div className={`w-12 h-6 rounded-full p-1 transition-colors ${trackingMode === "tracking" ? "bg-emerald-500" : "bg-gray-200"}`}>
-                            <div className={`w-4 h-4 rounded-full bg-white shadow-sm transform transition-transform ${trackingMode === "tracking" ? "translate-x-6" : ""}`} />
+
+                        <div className="relative">
+                            <select
+                                value={trackingMode}
+                                onChange={(e) => setTrackingMode(e.target.value as any)}
+                                className="appearance-none bg-emerald-50 text-emerald-600 font-bold py-2 pl-4 pr-8 rounded-xl border border-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                            >
+                                <option value="cut">Cut (Lose)</option>
+                                <option value="maintain">Maintain</option>
+                                <option value="bulk">Bulk (Gain)</option>
+                                <option value="no-tracking">No Tracking</option>
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-emerald-600">
+                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                            </div>
                         </div>
-                    </button>
+                    </div>
 
                     {[
-                        { icon: "🍎", label: "Diet Preferences", val: "None" },
                         { icon: "🔔", label: "Notifications", val: "On" },
                         { icon: "🔒", label: "Privacy", val: "" },
                         { icon: "❓", label: "Help & Support", val: "" },

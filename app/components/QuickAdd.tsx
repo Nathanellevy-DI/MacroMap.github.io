@@ -72,7 +72,13 @@ export default function QuickAdd({ onClose, onAddCalories }: QuickAddProps) {
                             key={type.id}
                             onClick={() => {
                                 if (type.id !== 'water' && type.id !== 'weight') {
-                                    // selecting meal type focus
+                                    onAddCalories(0, type.id);
+                                    onClose();
+                                }
+                                // Handle water/weight later if needed or via separate logic
+                                if (type.id === 'water') {
+                                    onAddCalories(0, 'water');
+                                    onClose();
                                 }
                             }}
                             className="flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-gray-50 transition-colors active:scale-95"

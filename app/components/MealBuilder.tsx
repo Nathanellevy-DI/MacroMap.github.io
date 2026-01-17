@@ -10,6 +10,7 @@ import NearbyRestaurants from "./NearbyRestaurants";
 interface MealBuilderProps {
     onBack: () => void;
     onLogMeal: (calories: number, items: FoodItem[]) => void;
+    mealType?: string | null;
 }
 
 type Tab = "search" | "restaurant" | "nearby" | "custom" | "scan";
@@ -268,9 +269,13 @@ function CustomFoodModal({ food, onAdd, onClose }: { food: WholeFood; onAdd: (fo
     );
 }
 
-export default function MealBuilder({ onBack, onLogMeal }: MealBuilderProps) {
+export default function MealBuilder({ onBack, onLogMeal, mealType }: MealBuilderProps) {
     const [foods, setFoods] = useState<FoodItem[]>([]);
-    const [activeTab, setActiveTab] = useState<Tab>("search");
+
+    // Auto-select tab and category based on mealType
+    const isSnack = mealType === "snack";
+
+    const [activeTab, setActiveTab] = useState<Tab>(isSnack ? "custom" : "search");
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<NutritionData[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -279,6 +284,19 @@ export default function MealBuilder({ onBack, onLogMeal }: MealBuilderProps) {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [barcode, setBarcode] = useState("");
     const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+
+    // Effect to enforce Snack rules or default behavior
+    useEffect(() => {
+        if (isSnack) {
+            setActiveTab("custom");
+            // Optionally could pre-select Fruit/Veg here, but letting them browse Categories (filtered) is better UX
+        }
+    }, [isSnack]);
+
+    // Filter categories for Snacks (Fruits, Vegetables, Nuts, Seeds, Yogurt/Dairy)
+    const displayCategories = isSnack
+        ? FOOD_CATEGORIES.filter(c => ["Fruits", "Vegetables", "Nuts", "Seeds", "Eggs & Dairy"].includes(c))
+        : FOOD_CATEGORIES;
 
     const handleFinish = () => {
         if (foods.length === 0) return;
@@ -356,7 +374,9 @@ export default function MealBuilder({ onBack, onLogMeal }: MealBuilderProps) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
-                <h1 className="text-xl font-bold text-gray-800">Meal Builder</h1>
+                <h1 className="text-xl font-bold text-gray-800">
+                    {mealType ? `${mealType.charAt(0).toUpperCase() + mealType.slice(1)} Builder` : "Meal Builder"}
+                </h1>
             </div>
 
             <MacroSummary totals={totals} />
@@ -364,12 +384,12 @@ export default function MealBuilder({ onBack, onLogMeal }: MealBuilderProps) {
             {/* Tabs */}
             <div className="tabs-container bg-white border border-gray-100 shadow-sm">
                 {[
-                    { id: "search", label: "🔍 Search" },
-                    { id: "nearby", label: "📍 Nearby" },
-                    { id: "restaurant", label: "🍔 Chains" },
-                    { id: "custom", label: "🥩 Foods" },
-                    { id: "scan", label: "📷 Scan" },
-                ].map((tab) => (
+                    { id: "search", label: "🔍 Search", show: !isSnack },
+                    { id: "nearby", label: "📍 Nearby", show: !isSnack },
+                    { id: "restaurant", label: "🍔 Chains", show: !isSnack },
+                    { id: "custom", label: isSnack ? "🍎 Healthy Snacks" : "🥩 Foods", show: true },
+                    { id: "scan", label: "📷 Scan", show: !isSnack },
+                ].filter(t => t.show).map((tab) => (
                     <button key={tab.id} onClick={() => { setActiveTab(tab.id as Tab); setSelectedCategory(null); }} className={`tab-button ${activeTab === tab.id ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 hover:bg-gray-50"}`}>
                         {tab.label}
                     </button>
@@ -446,7 +466,7 @@ export default function MealBuilder({ onBack, onLogMeal }: MealBuilderProps) {
                             <>
                                 <p className="text-sm text-gray-400 mb-3">Choose a category:</p>
                                 <div className="grid grid-cols-2 gap-2">
-                                    {FOOD_CATEGORIES.map((cat) => (
+                                    {displayCategories.map((cat) => (
                                         <button key={cat} onClick={() => setSelectedCategory(cat)} className="bg-white border border-gray-100 rounded-xl p-4 text-left hover:bg-gray-50 shadow-sm">
                                             <p className="font-semibold text-gray-800">{cat}</p>
                                             <p className="text-xs text-gray-500">{WHOLE_FOODS.filter(f => f.category === cat).length} items</p>
