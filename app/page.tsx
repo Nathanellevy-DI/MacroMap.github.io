@@ -500,7 +500,7 @@ export default function Home() {
   );
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 pt-12 pb-24 px-6" style={{ paddingTop: 'max(48px, env(safe-area-inset-top))' }}>
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 pt-12 pb-24" style={{ paddingTop: 'max(48px, env(safe-area-inset-top))' }}>
       {/* Full Screen Overlays for Tools */}
       {selectedTool === "scanner" && (
         <div className="fixed inset-0 z-[100] bg-black">
@@ -525,8 +525,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Main Content Area */}
-      <div className="max-w-lg mx-auto bg-white dark:bg-slate-800 min-h-screen shadow-2xl shadow-gray-200/50 dark:shadow-black/30 px-4">
+      {/* Main Content Area - Centered Container */}
+      <div className="w-full max-w-md mx-auto bg-white dark:bg-slate-800 min-h-screen shadow-2xl shadow-gray-200/50 dark:shadow-black/30">
         {activeTab === "dashboard" && renderDashboard()}
         {activeTab === "me" && (
           <MeSection
