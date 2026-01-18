@@ -11,7 +11,7 @@ import WeeklyGraph from "./components/WeeklyGraph";
 import NearbyRestaurants from "./components/NearbyRestaurants";
 import RewardCalendar from "./components/RewardCalendar";
 import ProgressDashboard from "./components/ProgressDashboard";
-import StreakRewards from "./components/StreakRewards";
+import StreakLevelCards from "./components/StreakLevelCards";
 import AchievementPopup from "./components/AchievementPopup";
 import { UserProgress, Achievement, calculateLevel, calculateStreak, checkNewAchievements } from "./lib/achievements";
 import type { FoodItem } from "./types";
@@ -420,10 +420,11 @@ export default function Home() {
       </div>
 
       {/* Reward System */}
-      <div className="space-y-6 my-6">
-        <StreakRewards
+      <div className="space-y-4 my-4">
+        <StreakLevelCards
           currentStreak={userProgress.currentStreak}
           longestStreak={userProgress.longestStreak}
+          progress={userProgress}
         />
 
         <ProgressDashboard progress={userProgress} />

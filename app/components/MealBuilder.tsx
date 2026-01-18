@@ -274,8 +274,18 @@ export default function MealBuilder({ onBack, onLogMeal, mealType }: MealBuilder
 
     // Auto-select tab and category based on mealType
     const isSnack = mealType === "snack";
+    const isFastFood = mealType === "fast-food";
+    const isMealTime = ["breakfast", "lunch", "dinner"].includes(mealType || "");
 
-    const [activeTab, setActiveTab] = useState<Tab>(isSnack ? "custom" : "search");
+    // Set initial tab based on meal type
+    const getInitialTab = (): Tab => {
+        if (isSnack) return "custom";
+        if (isFastFood) return "restaurant";
+        if (isMealTime) return "custom";
+        return "search";
+    };
+
+    const [activeTab, setActiveTab] = useState<Tab>(getInitialTab());
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<NutritionData[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -284,6 +294,7 @@ export default function MealBuilder({ onBack, onLogMeal, mealType }: MealBuilder
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [barcode, setBarcode] = useState("");
     const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+
 
     // Effect to enforce Snack rules or default behavior
     useEffect(() => {
@@ -384,11 +395,10 @@ export default function MealBuilder({ onBack, onLogMeal, mealType }: MealBuilder
             {/* Tabs */}
             <div className="tabs-container bg-white border border-gray-100 shadow-sm">
                 {[
-                    { id: "search", label: "🔍 Search", show: !isSnack },
-                    { id: "nearby", label: "📍 Nearby", show: !isSnack },
-                    { id: "restaurant", label: "🍔 Chains", show: !isSnack },
-                    { id: "custom", label: isSnack ? "🍎 Healthy Snacks" : "🥩 Foods", show: true },
-                    { id: "scan", label: "📷 Scan", show: !isSnack },
+                    { id: "search", label: "🔍 Search", show: !isSnack && !isFastFood && !isMealTime },
+                    { id: "restaurant", label: "🍔 Chains", show: isFastFood || (!isSnack && !isMealTime) },
+                    { id: "custom", label: isSnack ? "🍎 Healthy Snacks" : "🥩 Foods", show: !isFastFood },
+                    { id: "scan", label: "📷 Scan", show: !isSnack && !isFastFood },
                 ].filter(t => t.show).map((tab) => (
                     <button key={tab.id} onClick={() => { setActiveTab(tab.id as Tab); setSelectedCategory(null); }} className={`tab-button ${activeTab === tab.id ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 hover:bg-gray-50"}`}>
                         {tab.label}
