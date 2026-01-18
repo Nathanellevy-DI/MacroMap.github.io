@@ -1,4 +1,4 @@
 1:"$Sreact.fragment"
-2:I[73575,["/MacroMap.github.io/_next/static/chunks/b607b38822be2bff.js","/MacroMap.github.io/_next/static/chunks/32f3728a1176f2cd.js"],"default"]
-3:I[92165,["/MacroMap.github.io/_next/static/chunks/b607b38822be2bff.js","/MacroMap.github.io/_next/static/chunks/32f3728a1176f2cd.js"],"default"]
-0:{"buildId":"tKeT9J4LRIYpn_cqhnUmp","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"loading":null,"isPartial":false}
+2:I[39756,["/MacroMap.github.io/_next/static/chunks/a13694a6e3e2948b.js","/MacroMap.github.io/_next/static/chunks/a2dfb6fc5208ab9b.js"],"default"]
+3:I[37457,["/MacroMap.github.io/_next/static/chunks/a13694a6e3e2948b.js","/MacroMap.github.io/_next/static/chunks/a2dfb6fc5208ab9b.js"],"default"]
+0:{"buildId":"ujqRsSEGNTnam_ax34e1X","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"loading":null,"isPartial":false}
