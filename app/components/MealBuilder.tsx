@@ -277,18 +277,15 @@ export default function MealBuilder({ onBack, onLogMeal, mealType }: MealBuilder
     const isFastFood = mealType === "fast-food";
     const isMealTime = ["breakfast", "lunch", "dinner"].includes(mealType || "");
 
-    // DEBUG: Log meal type detection
-    console.log("MealBuilder Debug:", { mealType, isSnack, isFastFood, isMealTime });
-
-    // Set initial tab based on meal type
-    const getInitialTab = (): Tab => {
+    // Get the correct initial tab based on meal type
+    const getCorrectTab = (): Tab => {
         if (isSnack) return "custom";
         if (isFastFood) return "restaurant";
         if (isMealTime) return "custom";
         return "search";
     };
 
-    const [activeTab, setActiveTab] = useState<Tab>(getInitialTab());
+    const [activeTab, setActiveTab] = useState<Tab>(getCorrectTab());
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<NutritionData[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -298,12 +295,15 @@ export default function MealBuilder({ onBack, onLogMeal, mealType }: MealBuilder
     const [barcode, setBarcode] = useState("");
     const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
+    // Effect to update tab when mealType changes
+    useEffect(() => {
+        setActiveTab(getCorrectTab());
+    }, [mealType]);
 
     // Effect to enforce Snack rules or default behavior
     useEffect(() => {
         if (isSnack) {
             setActiveTab("custom");
-            // Optionally could pre-select Fruit/Veg here, but letting them browse Categories (filtered) is better UX
         }
     }, [isSnack]);
 
@@ -395,18 +395,83 @@ export default function MealBuilder({ onBack, onLogMeal, mealType }: MealBuilder
 
             <MacroSummary totals={totals} />
 
-            {/* Tabs */}
-            <div className="tabs-container bg-white border border-gray-100 shadow-sm">
-                {[
-                    { id: "search", label: "🔍 Search", show: !isSnack && !isFastFood && !isMealTime },
-                    { id: "restaurant", label: "🍔 Chains", show: isFastFood },
-                    { id: "custom", label: isSnack ? "🍎 Healthy Snacks" : "🥩 Foods", show: !isFastFood },
-                    { id: "scan", label: "📷 Scan", show: !isFastFood },
-                ].filter(t => t.show).map((tab) => (
-                    <button key={tab.id} onClick={() => { setActiveTab(tab.id as Tab); setSelectedCategory(null); }} className={`tab-button ${activeTab === tab.id ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 hover:bg-gray-50"}`}>
-                        {tab.label}
+            {/* Tabs - Explicit conditions for each meal type */}
+            <div className="tabs-container bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm">
+                {/* RESTAURANTS: Only show Chains */}
+                {isFastFood && (
+                    <button
+                        onClick={() => { setActiveTab("restaurant"); setSelectedCategory(null); }}
+                        className={`tab-button ${activeTab === "restaurant" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700"}`}
+                    >
+                        🍔 Chains
                     </button>
-                ))}
+                )}
+
+                {/* MEALS (breakfast/lunch/dinner): Foods + Scan */}
+                {isMealTime && (
+                    <>
+                        <button
+                            onClick={() => { setActiveTab("custom"); setSelectedCategory(null); }}
+                            className={`tab-button ${activeTab === "custom" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700"}`}
+                        >
+                            🥩 Foods
+                        </button>
+                        <button
+                            onClick={() => { setActiveTab("scan"); setSelectedCategory(null); }}
+                            className={`tab-button ${activeTab === "scan" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700"}`}
+                        >
+                            📷 Scan
+                        </button>
+                    </>
+                )}
+
+                {/* SNACKS: Healthy Snacks + Scan */}
+                {isSnack && (
+                    <>
+                        <button
+                            onClick={() => { setActiveTab("custom"); setSelectedCategory(null); }}
+                            className={`tab-button ${activeTab === "custom" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700"}`}
+                        >
+                            🍎 Healthy Snacks
+                        </button>
+                        <button
+                            onClick={() => { setActiveTab("scan"); setSelectedCategory(null); }}
+                            className={`tab-button ${activeTab === "scan" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700"}`}
+                        >
+                            📷 Scan
+                        </button>
+                    </>
+                )}
+
+                {/* DEFAULT/OTHER: All tabs */}
+                {!isFastFood && !isMealTime && !isSnack && (
+                    <>
+                        <button
+                            onClick={() => { setActiveTab("search"); setSelectedCategory(null); }}
+                            className={`tab-button ${activeTab === "search" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700"}`}
+                        >
+                            🔍 Search
+                        </button>
+                        <button
+                            onClick={() => { setActiveTab("restaurant"); setSelectedCategory(null); }}
+                            className={`tab-button ${activeTab === "restaurant" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700"}`}
+                        >
+                            🍔 Chains
+                        </button>
+                        <button
+                            onClick={() => { setActiveTab("custom"); setSelectedCategory(null); }}
+                            className={`tab-button ${activeTab === "custom" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700"}`}
+                        >
+                            🥩 Foods
+                        </button>
+                        <button
+                            onClick={() => { setActiveTab("scan"); setSelectedCategory(null); }}
+                            className={`tab-button ${activeTab === "scan" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700"}`}
+                        >
+                            📷 Scan
+                        </button>
+                    </>
+                )}
             </div>
 
             {/* Tab Content */}
