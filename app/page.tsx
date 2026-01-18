@@ -17,6 +17,7 @@ import StreakLevelCards from "./components/StreakLevelCards";
 import AchievementPopup from "./components/AchievementPopup";
 import { UserProgress, Achievement, calculateLevel, calculateStreak, checkNewAchievements } from "./lib/achievements";
 import WeightModal from "./components/WeightModal";
+import ThemeToggle from "./components/ThemeToggle";
 import type { FoodItem } from "./types";
 
 type NavTab = "dashboard" | "add" | "me";
@@ -305,27 +306,30 @@ export default function Home() {
   const renderDashboard = () => (
     <div className="space-y-6 pb-24 px-4 animate-in fade-in duration-500">
       {/* Date Header */}
-      <div className="flex items-center justify-between py-2 bg-white sticky top-0 z-10 shadow-sm -mx-4 px-4">
-        <button onClick={() => handleDateChange(-1)} className="text-emerald-500 p-2 hover:bg-emerald-50 rounded-full">
+      <div className="flex items-center justify-between py-2 bg-white dark:bg-slate-900 sticky top-0 z-10 shadow-sm -mx-4 px-4">
+        <button onClick={() => handleDateChange(-1)} className="text-emerald-500 p-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         </button>
-        <div className="flex items-center gap-2 font-semibold text-gray-800">
+        <div className="flex items-center gap-2 font-semibold text-gray-800 dark:text-white">
           <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
           {currentDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
         </div>
-        <button onClick={() => handleDateChange(1)} className="text-emerald-500 p-2 hover:bg-emerald-50 rounded-full">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button onClick={() => handleDateChange(1)} className="text-emerald-500 p-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+          </button>
+        </div>
       </div>
 
       {/* Apple-Style Ring Card */}
-      <div className="mx-4 bg-white rounded-3xl p-6 shadow-sm border border-gray-100 relative overflow-hidden">
+      <div className="mx-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-6 shadow-lg shadow-black/5 dark:shadow-black/20 border border-white/50 dark:border-slate-700/50 relative overflow-hidden">
         {trackingMode !== "no-tracking" ? (
           // Reusing budget view for all modes for now, but label can change
           <>
             <div className="text-center mb-8">
-              <p className="text-sm text-gray-500 font-medium capitalize">{trackingMode} Target</p>
-              <p className="text-2xl font-bold text-gray-800">{budget}</p>
+              <p className="text-sm text-gray-500 dark:text-slate-400 font-medium capitalize">{trackingMode} Target</p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-white">{budget}</p>
             </div>
 
             {/* Ring Visualization - FIXED: Icon embedded in SVG for perfect centering */}
@@ -424,34 +428,24 @@ export default function Home() {
       </div>
 
       {/* Reward System */}
-      <div className="space-y-4 my-4 flex flex-col items-center w-full">
-        <div className="w-full max-w-md">
-          <StreakLevelCards
-            currentStreak={userProgress.currentStreak}
-            longestStreak={userProgress.longestStreak}
-            progress={userProgress}
-          />
-        </div>
+      <div className="space-y-4 my-4 px-4">
+        <StreakLevelCards
+          currentStreak={userProgress.currentStreak}
+          longestStreak={userProgress.longestStreak}
+          progress={userProgress}
+        />
 
-        <div className="w-full max-w-md">
-          <ProgressDashboard progress={userProgress} />
-        </div>
+        <ProgressDashboard progress={userProgress} />
 
-        <div className="w-full max-w-md">
-          <WeightProgress currentWeight={weight} />
-        </div>
+        <WeightProgress currentWeight={weight} />
 
-        <div className="w-full max-w-md">
-          <WeeklyProgressChart history={history} budget={budget} />
-        </div>
+        <WeeklyProgressChart history={history} budget={budget} />
 
-        <div className="w-full max-w-md">
-          <RewardCalendar
-            history={history}
-            budget={budget}
-            onDateSelect={(date) => setCurrentDate(new Date(date))}
-          />
-        </div>
+        <RewardCalendar
+          history={history}
+          budget={budget}
+          onDateSelect={(date) => setCurrentDate(new Date(date))}
+        />
       </div>
 
       {/* TOOLS MOVED TO DASHBOARD */}
@@ -506,7 +500,7 @@ export default function Home() {
   );
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800 pt-12 pb-24 px-6" style={{ paddingTop: 'max(48px, env(safe-area-inset-top))' }}>
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 pt-12 pb-24 px-6" style={{ paddingTop: 'max(48px, env(safe-area-inset-top))' }}>
       {/* Full Screen Overlays for Tools */}
       {selectedTool === "scanner" && (
         <div className="fixed inset-0 z-[100] bg-black">
@@ -532,7 +526,7 @@ export default function Home() {
       )}
 
       {/* Main Content Area */}
-      <div className="max-w-lg mx-auto bg-white min-h-screen shadow-2xl shadow-gray-200/50 px-4">
+      <div className="max-w-lg mx-auto bg-white dark:bg-slate-800 min-h-screen shadow-2xl shadow-gray-200/50 dark:shadow-black/30 px-4">
         {activeTab === "dashboard" && renderDashboard()}
         {activeTab === "me" && (
           <MeSection

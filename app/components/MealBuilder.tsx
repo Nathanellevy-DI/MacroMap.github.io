@@ -277,6 +277,9 @@ export default function MealBuilder({ onBack, onLogMeal, mealType }: MealBuilder
     const isFastFood = mealType === "fast-food";
     const isMealTime = ["breakfast", "lunch", "dinner"].includes(mealType || "");
 
+    // DEBUG: Log meal type detection
+    console.log("MealBuilder Debug:", { mealType, isSnack, isFastFood, isMealTime });
+
     // Set initial tab based on meal type
     const getInitialTab = (): Tab => {
         if (isSnack) return "custom";

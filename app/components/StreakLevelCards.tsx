@@ -13,7 +13,7 @@ export default function StreakLevelCards({ currentStreak, longestStreak, progres
     const xpPercentage = Math.min((current / needed) * 100, 100);
 
     return (
-        <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+        <div className="grid grid-cols-2 gap-4">
             {/* Streak Card */}
             <div className="relative overflow-hidden bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 rounded-2xl p-5 text-white shadow-xl shadow-orange-500/25">
                 {/* Decorative circles */}
