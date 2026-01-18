@@ -541,7 +541,7 @@ export default function Home() {
       </div>
 
       {/* Weight Progress */}
-      <WeightProgress currentWeight={weight} />
+      <WeightProgress currentWeight={weight} onLogClick={() => setShowWeightModal(true)} />
 
       {/* Weekly Chart */}
       <WeeklyProgressChart history={history} budget={budget} />
