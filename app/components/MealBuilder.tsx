@@ -396,9 +396,9 @@ export default function MealBuilder({ onBack, onLogMeal, mealType }: MealBuilder
             <div className="tabs-container bg-white border border-gray-100 shadow-sm">
                 {[
                     { id: "search", label: "🔍 Search", show: !isSnack && !isFastFood && !isMealTime },
-                    { id: "restaurant", label: "🍔 Chains", show: isFastFood || (!isSnack && !isMealTime) },
+                    { id: "restaurant", label: "🍔 Chains", show: isFastFood },
                     { id: "custom", label: isSnack ? "🍎 Healthy Snacks" : "🥩 Foods", show: !isFastFood },
-                    { id: "scan", label: "📷 Scan", show: !isSnack && !isFastFood },
+                    { id: "scan", label: "📷 Scan", show: !isFastFood },
                 ].filter(t => t.show).map((tab) => (
                     <button key={tab.id} onClick={() => { setActiveTab(tab.id as Tab); setSelectedCategory(null); }} className={`tab-button ${activeTab === tab.id ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-gray-500 hover:bg-gray-50"}`}>
                         {tab.label}

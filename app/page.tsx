@@ -424,24 +424,34 @@ export default function Home() {
       </div>
 
       {/* Reward System */}
-      <div className="space-y-4 my-4">
-        <StreakLevelCards
-          currentStreak={userProgress.currentStreak}
-          longestStreak={userProgress.longestStreak}
-          progress={userProgress}
-        />
+      <div className="space-y-4 my-4 flex flex-col items-center w-full">
+        <div className="w-full max-w-md">
+          <StreakLevelCards
+            currentStreak={userProgress.currentStreak}
+            longestStreak={userProgress.longestStreak}
+            progress={userProgress}
+          />
+        </div>
 
-        <ProgressDashboard progress={userProgress} />
+        <div className="w-full max-w-md">
+          <ProgressDashboard progress={userProgress} />
+        </div>
 
-        <WeightProgress currentWeight={weight} />
+        <div className="w-full max-w-md">
+          <WeightProgress currentWeight={weight} />
+        </div>
 
-        <WeeklyProgressChart history={history} budget={budget} />
+        <div className="w-full max-w-md">
+          <WeeklyProgressChart history={history} budget={budget} />
+        </div>
 
-        <RewardCalendar
-          history={history}
-          budget={budget}
-          onDateSelect={(date) => setCurrentDate(new Date(date))}
-        />
+        <div className="w-full max-w-md">
+          <RewardCalendar
+            history={history}
+            budget={budget}
+            onDateSelect={(date) => setCurrentDate(new Date(date))}
+          />
+        </div>
       </div>
 
       {/* TOOLS MOVED TO DASHBOARD */}
