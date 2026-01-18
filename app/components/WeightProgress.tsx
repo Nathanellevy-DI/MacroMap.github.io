@@ -35,8 +35,8 @@ export default function WeightProgress({ currentWeight }: { currentWeight: numbe
 
     return (
         <div className={`rounded-2xl p-5 border ${progress.isLoss
-                ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800'
-                : 'bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-orange-200 dark:border-orange-800'
+            ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800'
+            : 'bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-orange-200 dark:border-orange-800'
             }`}>
             <div className="flex items-center justify-between mb-4">
                 <h4 className="font-semibold text-gray-800 dark:text-white">Weight Progress</h4>
@@ -57,7 +57,7 @@ export default function WeightProgress({ currentWeight }: { currentWeight: numbe
                 <div>
                     <div className="text-xs text-gray-500 dark:text-slate-400 mb-1">{progress.isLoss ? "Lost" : "Gained"}</div>
                     <div className={`text-xl font-bold ${progress.isLoss ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                        {progress.isLoss ? '-' : '+'}{progress.change}
+                        {progress.isLoss ? '-' : '+'}{Math.abs(progress.change)}
                     </div>
                     <div className="text-xs text-gray-400 dark:text-slate-500">{progress.unit}</div>
                 </div>

@@ -4,6 +4,9 @@
 
 @import "tailwindcss";
 
+/* Enable class-based dark mode for Tailwind 4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Theme Variables */
 :root {
   /* Default to Light Mode (Health App Style) */

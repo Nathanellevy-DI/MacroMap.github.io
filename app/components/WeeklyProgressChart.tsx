@@ -1,108 +1,125 @@
 "use client";
 
-import { useMemo } from "react";
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import { useMemo, useState, useEffect } from "react";
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    CartesianGrid,
+    ReferenceLine
+} from "recharts";
+import { getWeightLogs } from "../lib/weight-tracker";
 
 interface WeeklyProgressChartProps {
-    history: Record<string, { consumed: number; water: number }>;
+    history: Record<string, { consumed: number; weight?: number }>;
     budget: number;
 }
 
 export default function WeeklyProgressChart({ history, budget }: WeeklyProgressChartProps) {
-    const chartData = useMemo(() => {
-        const data = [];
-        const today = new Date();
+    const [weights, setWeights] = useState<Record<string, number>>({});
 
+    useEffect(() => {
+        // load weights from local storage via helper
+        const logs = getWeightLogs();
+        const map: Record<string, number> = {};
+        logs.forEach(l => {
+            map[l.date] = l.weight;
+        });
+        setWeights(map);
+    }, []);
+
+    // Transform history object to sorted array for chart
+    const data = useMemo(() => {
+        // Get last 7 days including today
+        const dates = [];
         for (let i = 6; i >= 0; i--) {
-            const date = new Date(today);
-            date.setDate(date.getDate() - i);
-            const dateKey = date.toISOString().split("T")[0];
-            const dayData = history[dateKey] || { consumed: 0, water: 0 };
-
-            data.push({
-                day: date.toLocaleDateString("en-US", { weekday: "short" }),
-                calories: dayData.consumed,
-                goal: budget,
-                water: dayData.water,
-            });
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            dates.push(d.toISOString().split("T")[0]);
         }
 
-        return data;
-    }, [history, budget]);
+        return dates.map(date => {
+            const entry = history[date];
+            return {
+                day: new Date(date).toLocaleDateString("en-US", { weekday: "short" }),
+                fullDate: date,
+                calories: entry ? entry.consumed : 0,
+                weight: weights[date] || null // Use loaded weight data
+            };
+        });
+    }, [history, weights]);
 
-    const totalCalories = chartData.reduce((sum, day) => sum + day.calories, 0);
-    const avgCalories = Math.round(totalCalories / 7);
-    const daysOnTrack = chartData.filter(day => day.calories <= budget && day.calories > 0).length;
+    // If no data, show empty state (optional), but graph handles 0s fine
+    if (Object.keys(history).length === 0 && Object.keys(weights).length === 0) {
+        // We still show the empty grid for the last 7 days
+    }
 
     return (
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-gray-800">Weekly Progress</h3>
-                <div className="flex gap-3">
-                    <div className="text-right">
-                        <div className="text-xs text-gray-500">Avg/Day</div>
-                        <div className="text-sm font-bold text-gray-800">{avgCalories} cal</div>
-                    </div>
-                    <div className="text-right">
-                        <div className="text-xs text-gray-500">On Track</div>
-                        <div className="text-sm font-bold text-emerald-600">{daysOnTrack}/7 days</div>
-                    </div>
+        <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-xl shadow-gray-200/50 dark:shadow-black/20 border border-white/50 dark:border-slate-700/50">
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">Weekly Progress</h3>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Calories & Weight Trend</p>
                 </div>
             </div>
 
-            <div className="h-40">
+            <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                        <defs>
-                            <linearGradient id="colorCalories" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
+                    <LineChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                         <XAxis
                             dataKey="day"
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#9ca3af', fontSize: 11 }}
+                            tick={{ fontSize: 12, fill: '#94a3b8' }}
+                            dy={10}
                         />
                         <YAxis
+                            yAxisId="calories"
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#9ca3af', fontSize: 10 }}
-                            domain={[0, 'auto']}
+                            tick={{ fontSize: 12, fill: '#10b981' }}
+                        />
+                        <YAxis
+                            yAxisId="weight"
+                            orientation="right"
+                            domain={['auto', 'auto']}
+                            hide={false} // Show weight axis
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fontSize: 12, fill: '#3b82f6' }}
                         />
                         <Tooltip
-                            contentStyle={{
-                                background: '#1f2937',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '12px',
-                                color: '#fff'
-                            }}
-                            formatter={(value) => [`${value} cal`, 'Calories']}
+                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                            cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
                         />
-                        <Area
+                        <ReferenceLine y={budget} yAxisId="calories" stroke="#ef4444" strokeDasharray="3 3" opacity={0.5} />
+
+                        <Line
+                            yAxisId="calories"
                             type="monotone"
                             dataKey="calories"
                             stroke="#10b981"
-                            strokeWidth={2}
-                            fillOpacity={1}
-                            fill="url(#colorCalories)"
+                            strokeWidth={3}
+                            dot={{ r: 4, fill: '#10b981', strokeWidth: 0 }}
+                            activeDot={{ r: 6 }}
                         />
-                    </AreaChart>
+                        {/* Render weight line if data exists */}
+                        <Line
+                            yAxisId="weight"
+                            type="monotone"
+                            dataKey="weight"
+                            stroke="#3b82f6"
+                            strokeWidth={2}
+                            strokeDasharray="5 5"
+                            dot={{ r: 3, fill: '#3b82f6' }}
+                            connectNulls
+                        />
+                    </LineChart>
                 </ResponsiveContainer>
-            </div>
-
-            {/* Goal line indicator */}
-            <div className="flex items-center justify-center gap-4 mt-4 text-xs text-gray-500">
-                <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                    <span>Calories Consumed</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-6 h-0.5 bg-gray-300" />
-                    <span>Daily Goal: {budget}</span>
-                </div>
             </div>
         </div>
     );

@@ -6,21 +6,22 @@ interface StreakLevelCardsProps {
     currentStreak: number;
     longestStreak: number;
     progress: UserProgress;
+    onLevelClick?: () => void;
 }
 
-export default function StreakLevelCards({ currentStreak, longestStreak, progress }: StreakLevelCardsProps) {
+export default function StreakLevelCards({ currentStreak, longestStreak, progress, onLevelClick }: StreakLevelCardsProps) {
     const { current, needed } = getXPProgressInLevel(progress.xp, progress.level);
     const xpPercentage = Math.min((current / needed) * 100, 100);
 
     return (
         <div className="w-full grid grid-cols-2 gap-3">
             {/* Streak Card */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 rounded-2xl p-4 text-white shadow-lg">
+            <div className="relative overflow-hidden bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 rounded-2xl p-4 text-white shadow-lg flex flex-col items-center justify-center text-center">
                 <div className="absolute -right-4 -top-4 w-16 h-16 bg-white/10 rounded-full" />
                 <div className="absolute -right-6 -bottom-6 w-20 h-20 bg-white/5 rounded-full" />
 
-                <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-2">
+                <div className="relative z-10 flex flex-col items-center w-full">
+                    <div className="flex items-center justify-center gap-2 mb-2">
                         <span className="text-xs font-medium uppercase tracking-wider opacity-80">Streak</span>
                         <span className="text-xl">🔥</span>
                     </div>
@@ -33,7 +34,7 @@ export default function StreakLevelCards({ currentStreak, longestStreak, progres
                     </div>
 
                     {longestStreak > 0 && (
-                        <div className="mt-2 pt-2 border-t border-white/20">
+                        <div className="mt-2 pt-2 border-t border-white/20 w-full">
                             <div className="text-xs opacity-70">Best: {longestStreak} days</div>
                         </div>
                     )}
@@ -41,12 +42,15 @@ export default function StreakLevelCards({ currentStreak, longestStreak, progres
             </div>
 
             {/* Level Card */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 rounded-2xl p-4 text-white shadow-lg">
+            <div
+                onClick={onLevelClick}
+                className="relative overflow-hidden bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 rounded-2xl p-4 text-white shadow-lg flex flex-col items-center justify-center text-center cursor-pointer active:scale-95 transition-transform"
+            >
                 <div className="absolute -right-4 -top-4 w-16 h-16 bg-white/10 rounded-full" />
                 <div className="absolute -right-6 -bottom-6 w-20 h-20 bg-white/5 rounded-full" />
 
-                <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-2">
+                <div className="relative z-10 flex flex-col items-center w-full">
+                    <div className="flex items-center justify-center gap-2 mb-2">
                         <span className="text-xs font-medium uppercase tracking-wider opacity-80">Level</span>
                         <span className="text-xl">⭐</span>
                     </div>
@@ -55,8 +59,8 @@ export default function StreakLevelCards({ currentStreak, longestStreak, progres
                         {progress.level}
                     </div>
 
-                    <div className="mt-2">
-                        <div className="flex justify-between text-xs opacity-80 mb-1">
+                    <div className="mt-2 w-full">
+                        <div className="flex justify-between text-xs opacity-80 mb-1 px-1">
                             <span>{current} XP</span>
                             <span>{needed} XP</span>
                         </div>

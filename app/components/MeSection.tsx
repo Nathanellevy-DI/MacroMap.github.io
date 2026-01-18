@@ -103,13 +103,11 @@ export default function MeSection({
         }
     };
 
-
-
     return (
         <div className="pb-24 animate-in fade-in duration-500">
             {/* Header */}
-            <div className="bg-white pt-safe-top pb-6 px-4 shadow-sm mb-6 sticky top-0 z-10">
-                <h1 className="text-xl font-bold text-gray-800">My Profile</h1>
+            <div className="bg-white dark:bg-slate-900 pt-safe-top pb-6 px-4 shadow-sm mb-6 sticky top-0 z-10 transition-colors">
+                <h1 className="text-xl font-bold text-gray-800 dark:text-white">My Profile</h1>
             </div>
 
             <div className="px-4 space-y-6">
@@ -150,79 +148,79 @@ export default function MeSection({
 
                 {/* Settings List */}
                 <div className="space-y-3">
-                    <h3 className="font-semibold text-gray-700 ml-1">Settings</h3>
+                    <h3 className="font-semibold text-gray-700 dark:text-slate-300 ml-1">Settings</h3>
 
                     {/* Goal Setting */}
-                    <button onClick={handleGoalClick} className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors">
+                    <button onClick={handleGoalClick} className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center gap-4 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                         <span className="text-xl">🎯</span>
-                        <span className="flex-1 text-left font-medium text-gray-800">My Daily Goal</span>
+                        <span className="flex-1 text-left font-medium text-gray-800 dark:text-white">My Daily Goal</span>
                         <span className="text-emerald-500 font-bold">{budget} kcal</span>
-                        <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        <svg className="w-5 h-5 text-gray-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </button>
 
                     {/* Diet Preference */}
-                    <button onClick={handleDietClick} className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors">
+                    <button onClick={handleDietClick} className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center gap-4 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                         <span className="text-xl">🍎</span>
-                        <span className="flex-1 text-left font-medium text-gray-800">Diet Preference</span>
+                        <span className="flex-1 text-left font-medium text-gray-800 dark:text-white">Diet Preference</span>
                         <span className="text-emerald-500 font-bold">{diet || "None"}</span>
-                        <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        <svg className="w-5 h-5 text-gray-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </button>
 
                     {/* Mode Selection Dropdown */}
-                    <div className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors relative">
+                    <div className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center gap-4 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors relative">
                         <span className="text-xl">📊</span>
                         <div className="flex-1 text-left">
-                            <span className="block font-medium text-gray-800">Tracking Mode</span>
-                            <span className="text-xs text-gray-400">Current Strategy</span>
+                            <span className="block font-medium text-gray-800 dark:text-white">Tracking Mode</span>
+                            <span className="text-xs text-gray-400 dark:text-slate-400">Current Strategy</span>
                         </div>
 
                         <div className="relative">
                             <select
                                 value={trackingMode}
                                 onChange={(e) => setTrackingMode(e.target.value as any)}
-                                className="appearance-none bg-emerald-50 text-emerald-600 font-bold py-2 pl-4 pr-8 rounded-xl border border-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                                className="appearance-none bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold py-2 pl-4 pr-8 rounded-xl border border-emerald-100 dark:border-emerald-800/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                             >
                                 <option value="cut">Cut (Lose)</option>
                                 <option value="maintain">Maintain</option>
                                 <option value="bulk">Bulk (Gain)</option>
                                 <option value="no-tracking">No Tracking</option>
                             </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-emerald-600">
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-emerald-600 dark:text-emerald-400">
                                 <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                             </div>
                         </div>
                     </div>
 
                     {/* Water Goal */}
-                    <button onClick={handleWaterGoalClick} className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors">
+                    <button onClick={handleWaterGoalClick} className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center gap-4 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                         <span className="text-xl">💧</span>
-                        <span className="flex-1 text-left font-medium text-gray-800">Water Goal</span>
+                        <span className="flex-1 text-left font-medium text-gray-800 dark:text-white">Water Goal</span>
                         <span className="text-blue-500 font-bold">{waterGoal} {waterUnit}</span>
-                        <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        <svg className="w-5 h-5 text-gray-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </button>
 
                     {/* Water Unit Toggle */}
-                    <button onClick={handleWaterUnitClick} className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors">
+                    <button onClick={handleWaterUnitClick} className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center gap-4 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                         <span className="text-xl">📊</span>
                         <div className="flex-1 text-left">
-                            <span className="block font-medium text-gray-800">Water Unit</span>
-                            <span className="text-xs text-gray-400">Tap to switch</span>
+                            <span className="block font-medium text-gray-800 dark:text-white">Water Unit</span>
+                            <span className="text-xs text-gray-400 dark:text-slate-400">Tap to switch</span>
                         </div>
                         <span className="text-blue-500 font-bold capitalize">{waterUnit}</span>
                     </button>
 
                     {/* Quick Tools Customization */}
                     <div className="space-y-2">
-                        <h4 className="font-semibold text-gray-700 ml-1 text-sm">Customize Quick Tools</h4>
+                        <h4 className="font-semibold text-gray-700 dark:text-slate-300 ml-1 text-sm">Customize Quick Tools</h4>
                         {AVAILABLE_TOOLS.map((tool) => (
                             <button
                                 key={tool.id}
                                 onClick={() => toggleTool(tool.id)}
-                                className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors"
+                                className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center gap-4 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
                             >
                                 <span className="text-xl">{tool.icon}</span>
-                                <span className="flex-1 text-left font-medium text-gray-800">{tool.label}</span>
-                                <div className={`w-12 h-6 rounded-full p-1 transition-colors ${enabledTools.includes(tool.id) ? 'bg-emerald-500' : 'bg-gray-300'}`}>
+                                <span className="flex-1 text-left font-medium text-gray-800 dark:text-white">{tool.label}</span>
+                                <div className={`w-12 h-6 rounded-full p-1 transition-colors ${enabledTools.includes(tool.id) ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-slate-600'}`}>
                                     <div className={`w-4 h-4 rounded-full bg-white shadow-sm transform transition-transform ${enabledTools.includes(tool.id) ? "translate-x-6" : ""}`} />
                                 </div>
                             </button>
@@ -234,16 +232,16 @@ export default function MeSection({
                         { icon: "🔒", label: "Privacy", val: "" },
                         { icon: "❓", label: "Help & Support", val: "" },
                     ].map((item, i) => (
-                        <button key={i} className="w-full bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm hover:bg-gray-50 transition-colors">
+                        <button key={i} className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center gap-4 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                             <span className="text-xl">{item.icon}</span>
-                            <span className="flex-1 text-left font-medium text-gray-800">{item.label}</span>
-                            <span className="text-sm text-gray-400">{item.val}</span>
-                            <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                            <span className="flex-1 text-left font-medium text-gray-800 dark:text-white">{item.label}</span>
+                            <span className="text-sm text-gray-400 dark:text-slate-500">{item.val}</span>
+                            <svg className="w-5 h-5 text-gray-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                         </button>
                     ))}
                 </div>
 
-                <button className="w-full py-4 text-red-500 font-medium text-sm hover:bg-red-50 rounded-2xl transition-colors">
+                <button className="w-full py-4 text-red-500 font-medium text-sm hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-colors">
                     Log Out
                 </button>
             </div>

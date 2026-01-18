@@ -123,17 +123,25 @@ export function calculateStreak(history: Record<string, { consumed: number; wate
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
-    // Check if user logged today or yesterday for current streak
-    if (dates[0] === today || dates[0] === yesterday) {
+    // Check if user logged today, yesterday, or in the future (for testing continuity)
+    // We explicitly allow dates[0] >= yesterday to handle:
+    // 1. Today's logs
+    // 2. Future logs (if user changes date for testing)
+    // 3. Yesterday's logs (streak is still active, just not extended today yet)
+    if (dates[0] >= yesterday) {
         currentStreak = 1;
 
         for (let i = 1; i < dates.length; i++) {
             const prevDate = new Date(dates[i - 1]);
             const currDate = new Date(dates[i]);
-            const diffDays = Math.floor((prevDate.getTime() - currDate.getTime()) / 86400000);
+            const diffTime = Math.abs(prevDate.getTime() - currDate.getTime());
+            const diffDays = Math.round(diffTime / 86400000); // Use round to handle minor time shifts if any
 
             if (diffDays === 1) {
                 currentStreak++;
+            } else if (diffDays === 0) {
+                // Same day multiple entries? Should not happen with key-based history but safe to ignore
+                continue;
             } else {
                 break;
             }

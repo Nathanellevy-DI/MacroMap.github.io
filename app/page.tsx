@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import BottomNav from "./components/BottomNav";
 import Scanner from "./components/Scanner";
 import MealBuilder from "./components/MealBuilder";
 import QuickAdd from "./components/QuickAdd";
 import MeSection from "./components/MeSection";
 import InstallPrompt from "./components/InstallPrompt";
-import WeeklyGraph from "./components/WeeklyGraph";
 import NearbyRestaurants from "./components/NearbyRestaurants";
 import RewardCalendar from "./components/RewardCalendar";
 import ProgressDashboard from "./components/ProgressDashboard";
@@ -17,10 +17,11 @@ import StreakLevelCards from "./components/StreakLevelCards";
 import AchievementPopup from "./components/AchievementPopup";
 import { UserProgress, Achievement, calculateLevel, calculateStreak, checkNewAchievements } from "./lib/achievements";
 import WeightModal from "./components/WeightModal";
+import LevelModal from "./components/LevelModal";
 import ThemeToggle from "./components/ThemeToggle";
 import type { FoodItem } from "./types";
 
-type NavTab = "dashboard" | "add" | "me";
+type NavTab = "dashboard" | "progress" | "add" | "achievements" | "me";
 
 // ...
 
@@ -54,6 +55,7 @@ export default function Home() {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [waterGoal, setWaterGoal] = useState(8);
   const [waterUnit, setWaterUnit] = useState<"glasses" | "oz" | "liters">("glasses");
+  const [showLevelModal, setShowLevelModal] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // --- REWARD SYSTEM STATE ---
@@ -149,14 +151,43 @@ export default function Home() {
     }
   }, [userProgress, isLoaded]);
 
+  // Track if goals have been achieved today (to avoid double-awarding XP)
+  const [xpAwardedToday, setXpAwardedToday] = useState<{ water: boolean, calories: boolean }>({ water: false, calories: false });
+
+  // Reset XP tracking when date changes
+  useEffect(() => {
+    setXpAwardedToday({ water: false, calories: false });
+  }, [dateKey]);
+
   const updateHistory = (type: "consumed" | "water", value: number) => {
     setHistory(prev => {
       const current = prev[dateKey] || { consumed: 0, water: 0 };
+      const newValue = type === "consumed"
+        ? current.consumed + value
+        : current.water + value;
+
+      // Check for water goal completion
+      if (type === "water" && newValue >= waterGoal && current.water < waterGoal && !xpAwardedToday.water) {
+        setTimeout(() => {
+          awardXP(20, "Hit water goal! 💧");
+          setXpAwardedToday(prev => ({ ...prev, water: true }));
+        }, 100);
+      }
+
+      // Check for calorie goal completion (within 10% of target)
+      if (type === "consumed" && newValue >= budget * 0.9 && newValue <= budget * 1.1 &&
+        (current.consumed < budget * 0.9 || current.consumed > budget * 1.1) && !xpAwardedToday.calories) {
+        setTimeout(() => {
+          awardXP(50, "Hit calorie goal! 🎯");
+          setXpAwardedToday(prev => ({ ...prev, calories: true }));
+        }, 100);
+      }
+
       return {
         ...prev,
         [dateKey]: {
           ...current,
-          [type]: type === "consumed" ? current.consumed + value : current.water + value
+          [type]: newValue
         }
       };
     });
@@ -181,8 +212,24 @@ export default function Home() {
       setShowWeightModal(true);
     } else {
       updateHistory("consumed", calories);
+      // Award XP for logging food
+      awardXP(10, "Logged food");
     }
     setActiveTab("dashboard");
+  };
+
+  // XP Award function with instant feedback
+  const awardXP = (amount: number, reason: string) => {
+    setUserProgress(prev => {
+      const newXP = prev.xp + amount;
+      const newLevel = calculateLevel(newXP);
+      return {
+        ...prev,
+        xp: newXP,
+        level: newLevel,
+        totalMeals: prev.totalMeals + (reason.includes("food") ? 1 : 0)
+      };
+    });
   };
 
   {/* Full Screen Tools */ }
@@ -379,8 +426,8 @@ export default function Home() {
 
                 {/* Center Content */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-4xl font-bold text-gray-800">{caloriesLeft}</span>
-                  <span className="text-sm text-gray-400 font-medium">left</span>
+                  <span className="text-4xl font-bold text-gray-800 dark:text-white">{caloriesLeft}</span>
+                  <span className="text-sm text-gray-400 dark:text-slate-400 font-medium">left</span>
                 </div>
               </div>
             </div>
@@ -427,41 +474,31 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Reward System */}
-      <div className="space-y-4 my-4 px-4">
-        <StreakLevelCards
-          currentStreak={userProgress.currentStreak}
-          longestStreak={userProgress.longestStreak}
-          progress={userProgress}
-        />
-
-        <ProgressDashboard progress={userProgress} />
-
-        <WeightProgress currentWeight={weight} />
-
-        <WeeklyProgressChart history={history} budget={budget} />
-
-        <RewardCalendar
-          history={history}
-          budget={budget}
-          onDateSelect={(date) => setCurrentDate(new Date(date))}
-        />
-      </div>
 
       {/* TOOLS MOVED TO DASHBOARD */}
       <div className="px-4 space-y-3">
-        <h3 className="text-gray-700 font-semibold pl-1">Quick Tools</h3>
+        <h3 className="text-gray-700 dark:text-slate-300 font-semibold pl-1">Quick Tools</h3>
+
+        {/* Healthy Snacks */}
+        <Link href="/snacks" className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform">
+          <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-2xl">🍎</div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-800 dark:text-white">Healthy Snacks</h3>
+            <p className="text-xs text-gray-500 dark:text-slate-400">Scan & find healthy options</p>
+          </div>
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        </Link>
 
         {/* Meal Builder (AI Meal Scan) */}
         {enabledTools.includes("meal-builder") && (
           <div
             onClick={() => handleToolClick("meal-builder")}
-            className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform"
+            className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform"
           >
-            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-2xl">🥬</div>
+            <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-2xl">🥬</div>
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-800">Meal Builder</h3>
-              <p className="text-xs text-gray-500">Build meals from restaurants & foods</p>
+              <h3 className="font-semibold text-gray-800 dark:text-white">Meal Builder</h3>
+              <p className="text-xs text-gray-500 dark:text-slate-400">Build meals from restaurants & foods</p>
             </div>
           </div>
         )}
@@ -470,32 +507,73 @@ export default function Home() {
         {enabledTools.includes("scanner") && (
           <div
             onClick={() => handleToolClick("scanner")}
-            className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform"
+            className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform"
           >
-            <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-2xl">📷</div>
+            <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-2xl">📷</div>
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-800">Ingredient Scanner</h3>
-              <p className="text-xs text-gray-500">Check for bans & red flags</p>
+              <h3 className="font-semibold text-gray-800 dark:text-white">Ingredient Scanner</h3>
+              <p className="text-xs text-gray-500 dark:text-slate-400">Check for bans & red flags</p>
             </div>
           </div>
         )}
 
         {/* My Diet (Restored) */}
         {enabledTools.includes("my-diet") && (
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 active:scale-[0.98] transition-transform">
-            <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-2xl">🔥</div>
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center gap-4 active:scale-[0.98] transition-transform">
+            <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-2xl">🔥</div>
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-800">My Diet</h3>
-              <p className="text-xs text-gray-500">Custom plan: Intermittent Fasting</p>
+              <h3 className="font-semibold text-gray-800 dark:text-white">My Diet</h3>
+              <p className="text-xs text-gray-500 dark:text-slate-400">Custom plan: Intermittent Fasting</p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Weekly Graph (Replaces Advice) */}
-      <div className="px-4">
-        <WeeklyGraph />
+    </div>
+  );
+
+  const renderProgress = () => (
+    <div className="space-y-6 pb-24 px-4 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex items-center justify-between py-4 bg-white dark:bg-slate-900 sticky top-0 z-10 -mx-4 px-4">
+        <h1 className="text-xl font-bold text-gray-800 dark:text-white">📊 Progress</h1>
+        <ThemeToggle />
       </div>
+
+      {/* Weight Progress */}
+      <WeightProgress currentWeight={weight} />
+
+      {/* Weekly Chart */}
+      <WeeklyProgressChart history={history} budget={budget} />
+
+      {/* Calendar */}
+      <RewardCalendar
+        history={history}
+        budget={budget}
+        onDateSelect={(date) => setCurrentDate(new Date(date))}
+      />
+    </div>
+  );
+
+  const renderAchievements = () => (
+    <div className="space-y-6 pb-24 px-4 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex items-center justify-between py-4 bg-white dark:bg-slate-900 sticky top-0 z-10 -mx-4 px-4">
+        <h1 className="text-xl font-bold text-gray-800 dark:text-white">🏆 Rewards</h1>
+        <ThemeToggle />
+      </div>
+
+
+      {/* Streak & Level Cards */}
+      <StreakLevelCards
+        currentStreak={userProgress.currentStreak}
+        longestStreak={userProgress.longestStreak}
+        progress={userProgress}
+        onLevelClick={() => setShowLevelModal(true)}
+      />
+
+      {/* Achievements Grid */}
+      <ProgressDashboard progress={userProgress} />
     </div>
   );
 
@@ -525,9 +603,11 @@ export default function Home() {
         </div>
       )}
 
-      {/* Main Content Area - Centered Container */}
-      <div className="w-full max-w-md mx-auto bg-white dark:bg-slate-800 min-h-screen shadow-2xl shadow-gray-200/50 dark:shadow-black/30">
+      {/* Main Content Area - Responsive Container */}
+      <div className="w-full max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto bg-white dark:bg-slate-800 min-h-screen shadow-2xl shadow-gray-200/50 dark:shadow-black/30">
         {activeTab === "dashboard" && renderDashboard()}
+        {activeTab === "progress" && renderProgress()}
+        {activeTab === "achievements" && renderAchievements()}
         {activeTab === "me" && (
           <MeSection
             budget={budget}
@@ -573,6 +653,13 @@ export default function Home() {
           onClose={() => setShowWeightModal(false)}
           onLogWeight={(w) => setWeight(w)}
           currentWeight={weight}
+        />
+      )}
+
+      {showLevelModal && (
+        <LevelModal
+          progress={userProgress}
+          onClose={() => setShowLevelModal(false)}
         />
       )}
 

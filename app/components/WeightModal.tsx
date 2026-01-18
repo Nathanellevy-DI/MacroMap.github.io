@@ -20,7 +20,7 @@ export default function WeightModal({ onClose, onLogWeight, currentWeight }: Wei
 
         // Load current weight if available
         const current = getCurrentWeight();
-        if (current.weight && !currentWeight) {
+        if (current && current.weight && !currentWeight) {
             setWeight(current.weight.toString());
         }
     }, [currentWeight]);
@@ -75,8 +75,8 @@ export default function WeightModal({ onClose, onLogWeight, currentWeight }: Wei
                                 type="button"
                                 onClick={() => setUnit("lbs")}
                                 className={`px-4 py-3 font-semibold transition-colors ${unit === "lbs"
-                                        ? "bg-emerald-500 text-white"
-                                        : "bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-600"
+                                    ? "bg-emerald-500 text-white"
+                                    : "bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-600"
                                     }`}
                             >
                                 lbs
@@ -85,8 +85,8 @@ export default function WeightModal({ onClose, onLogWeight, currentWeight }: Wei
                                 type="button"
                                 onClick={() => setUnit("kg")}
                                 className={`px-4 py-3 font-semibold transition-colors ${unit === "kg"
-                                        ? "bg-emerald-500 text-white"
-                                        : "bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-600"
+                                    ? "bg-emerald-500 text-white"
+                                    : "bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-600"
                                     }`}
                             >
                                 kg

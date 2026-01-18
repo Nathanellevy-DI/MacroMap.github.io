@@ -1,106 +1,80 @@
-"use client";
-
-// Weight Tracker Library - Manages initial weight vs current weight history
-
-interface WeightEntry {
+export interface WeightLog {
     date: string;
     weight: number;
     unit: 'lbs' | 'kg';
 }
 
-interface WeightData {
-    initialWeight: number | null;
-    initialDate: string | null;
-    initialUnit: 'lbs' | 'kg';
-    entries: WeightEntry[];
-}
+const STORAGE_KEY_LOGS = 'weight_logs';
+const STORAGE_KEY_START = 'weight_start';
 
-const STORAGE_KEY = 'macromap_weight_data';
+// Helper to get today's date string YYYY-MM-DD
+const getToday = () => new Date().toISOString().split('T')[0];
 
-function getWeightData(): WeightData {
-    if (typeof window === 'undefined') {
-        return { initialWeight: null, initialDate: null, initialUnit: 'lbs', entries: [] };
+export const setStartingWeight = (weight: number, unit: 'lbs' | 'kg' = 'lbs') => {
+    // Only set if not already set (immutable start weight rule)
+    if (!getInitialWeight()) {
+        const entry = { weight, unit, date: getToday() };
+        localStorage.setItem(STORAGE_KEY_START, JSON.stringify(entry));
+        // Also add to logs as first entry
+        addWeightLog(weight, unit);
     }
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-        return JSON.parse(data);
-    }
-    return { initialWeight: null, initialDate: null, initialUnit: 'lbs', entries: [] };
-}
+};
 
-function saveWeightData(data: WeightData): void {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
+export const getInitialWeight = (): { weight: number, unit: 'lbs' | 'kg' } | null => {
+    if (typeof window === 'undefined') return null;
+    const stored = localStorage.getItem(STORAGE_KEY_START);
+    return stored ? JSON.parse(stored) : null;
+};
 
-export function logWeight(weight: number, unit: 'lbs' | 'kg'): void {
-    const data = getWeightData();
-    const today = new Date().toISOString().split('T')[0];
+export const addWeightLog = (weight: number, unit: 'lbs' | 'kg') => {
+    const logs = getWeightLogs();
+    const today = getToday();
 
-    // If no initial weight set, this becomes the initial weight
-    if (data.initialWeight === null) {
-        data.initialWeight = weight;
-        data.initialDate = today;
-        data.initialUnit = unit;
-    }
-
-    // Add to entries (or update today's entry)
-    const existingIndex = data.entries.findIndex(e => e.date === today);
+    // Check if entry for today exists and update it, otherwise push new
+    const existingIndex = logs.findIndex(l => l.date === today);
     if (existingIndex >= 0) {
-        data.entries[existingIndex] = { date: today, weight, unit };
+        logs[existingIndex] = { date: today, weight, unit };
     } else {
-        data.entries.push({ date: today, weight, unit });
+        logs.push({ date: today, weight, unit });
     }
 
-    // Sort entries by date
-    data.entries.sort((a, b) => a.date.localeCompare(b.date));
+    // Sort logs by date just in case
+    logs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    saveWeightData(data);
-}
+    localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+};
 
-export function getInitialWeight(): { weight: number | null; date: string | null; unit: 'lbs' | 'kg' } {
-    const data = getWeightData();
-    return {
-        weight: data.initialWeight,
-        date: data.initialDate,
-        unit: data.initialUnit
-    };
-}
+export const getWeightLogs = (): WeightLog[] => {
+    if (typeof window === 'undefined') return [];
+    const stored = localStorage.getItem(STORAGE_KEY_LOGS);
+    return stored ? JSON.parse(stored) : [];
+};
 
-export function getCurrentWeight(): { weight: number | null; date: string | null; unit: 'lbs' | 'kg' } {
-    const data = getWeightData();
-    if (data.entries.length === 0) {
-        return { weight: data.initialWeight, date: data.initialDate, unit: data.initialUnit };
+export const getCurrentWeight = (): { weight: number, unit: 'lbs' | 'kg' } | null => {
+    const logs = getWeightLogs();
+    if (logs.length === 0) {
+        const start = getInitialWeight();
+        return start ? start : null;
     }
-    const latest = data.entries[data.entries.length - 1];
-    return { weight: latest.weight, date: latest.date, unit: latest.unit };
-}
+    return logs[logs.length - 1]; // Return last log
+};
 
-export function getWeightProgress(): {
-    initial: number | null;
-    current: number | null;
-    change: number;
-    unit: 'lbs' | 'kg';
-    isLoss: boolean;
-} {
-    const data = getWeightData();
-    const initial = data.initialWeight;
-    const current = data.entries.length > 0
-        ? data.entries[data.entries.length - 1].weight
-        : data.initialWeight;
+export const getWeightProgress = () => {
+    const start = getInitialWeight();
+    const current = getCurrentWeight();
 
-    const change = initial && current ? Math.round((initial - current) * 10) / 10 : 0;
+    if (!start || !current) return null;
 
+    // Normalize units if needed (simple assumption: users sticks to one, but for robustness could convert)
+    // For now assuming unit matches or just displaying raw numbers
     return {
-        initial,
-        current,
-        change: Math.abs(change),
-        unit: data.initialUnit,
-        isLoss: change > 0
+        initial: start.weight,
+        current: current.weight,
+        change: parseFloat((current.weight - start.weight).toFixed(1)),
+        unit: current.unit,
+        isLoss: current.weight < start.weight
     };
-}
+};
 
-export function getWeightHistory(): WeightEntry[] {
-    const data = getWeightData();
-    return data.entries;
-}
+// Legacy support wrapper if needed, or aliases
+export const logWeight = addWeightLog; 
