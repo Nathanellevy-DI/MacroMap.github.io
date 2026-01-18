@@ -24,7 +24,6 @@ export default function QuickAdd({ onClose, onAddCalories }: QuickAddProps) {
         { id: "lunch", label: "Lunch", icon: "🥗", bg: "bg-emerald-100", text: "text-emerald-600" },
         { id: "dinner", label: "Dinner", icon: "🍖", bg: "bg-blue-100", text: "text-blue-600" },
         { id: "snack", label: "Snack", icon: "🍎", bg: "bg-purple-100", text: "text-purple-600" },
-        { id: "water", label: "Water", icon: "💧", bg: "bg-cyan-100", text: "text-cyan-600" },
         { id: "weight", label: "Weight", icon: "⚖️", bg: "bg-gray-100", text: "text-gray-600" },
     ];
 
@@ -55,7 +54,7 @@ export default function QuickAdd({ onClose, onAddCalories }: QuickAddProps) {
                         <span className="text-xs font-medium text-gray-600">Scan Item</span>
                     </button>
 
-                    {/* NEW: Fast Food */}
+                    {/* Restaurants */}
                     <button
                         onClick={() => { onAddCalories(0, "fast-food"); onClose(); }}
                         className="flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-gray-50 transition-colors active:scale-95"
@@ -63,7 +62,7 @@ export default function QuickAdd({ onClose, onAddCalories }: QuickAddProps) {
                         <div className="w-14 h-14 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-2xl shadow-sm">
                             🍔
                         </div>
-                        <span className="text-xs font-medium text-gray-600">Fast Food</span>
+                        <span className="text-xs font-medium text-gray-600">Restaurants</span>
                     </button>
 
                     {/* Existing Meal Types */}
@@ -71,15 +70,8 @@ export default function QuickAdd({ onClose, onAddCalories }: QuickAddProps) {
                         <button
                             key={type.id}
                             onClick={() => {
-                                if (type.id !== 'water' && type.id !== 'weight') {
-                                    onAddCalories(0, type.id);
-                                    onClose();
-                                }
-                                // Handle water/weight later if needed or via separate logic
-                                if (type.id === 'water') {
-                                    onAddCalories(0, 'water');
-                                    onClose();
-                                }
+                                onAddCalories(0, type.id);
+                                onClose();
                             }}
                             className="flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-gray-50 transition-colors active:scale-95"
                         >

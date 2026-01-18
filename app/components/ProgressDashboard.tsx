@@ -28,21 +28,6 @@ export default function ProgressDashboard({ progress }: ProgressDashboardProps) 
 
     return (
         <div className="space-y-4">
-            {/* Level Progress */}
-            <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-3xl p-8 text-white shadow-lg">
-                <div className="flex items-center justify-between mb-3 px-2">
-                    <h3 className="text-lg font-bold">Level {progress.level} 🌟</h3>
-                    <span className="text-sm opacity-90">{current}/{needed} XP</span>
-                </div>
-                <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden mx-2">
-                    <div
-                        className="h-full bg-white rounded-full transition-all duration-500"
-                        style={{ width: `${xpPercentage}%` }}
-                    />
-                </div>
-                <p className="text-xs mt-2 opacity-75 px-2">{needed - current} XP until Level {progress.level + 1}</p>
-            </div>
-
             {/* Stats Grid */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
                 <h3 className="font-bold text-gray-800 mb-4 px-2">Your Progress</h3>

@@ -11,9 +11,12 @@ import WeeklyGraph from "./components/WeeklyGraph";
 import NearbyRestaurants from "./components/NearbyRestaurants";
 import RewardCalendar from "./components/RewardCalendar";
 import ProgressDashboard from "./components/ProgressDashboard";
+import WeeklyProgressChart from "./components/WeeklyProgressChart";
+import WeightProgress from "./components/WeightProgress";
 import StreakLevelCards from "./components/StreakLevelCards";
 import AchievementPopup from "./components/AchievementPopup";
 import { UserProgress, Achievement, calculateLevel, calculateStreak, checkNewAchievements } from "./lib/achievements";
+import WeightModal from "./components/WeightModal";
 import type { FoodItem } from "./types";
 
 type NavTab = "dashboard" | "add" | "me";
@@ -43,6 +46,7 @@ export default function Home() {
   const [budget, setBudget] = useState(2500);
   const [trackingMode, setTrackingMode] = useState<"cut" | "maintain" | "bulk" | "no-tracking">("maintain");
   const [weight, setWeight] = useState(70);
+  const [showWeightModal, setShowWeightModal] = useState(false);
   const [diet, setDiet] = useState<string | null>(null);
   const [enabledTools, setEnabledTools] = useState<string[]>(["meal-builder", "scanner", "my-diet"]);
   const [profileName, setProfileName] = useState("User");
@@ -172,8 +176,8 @@ export default function Home() {
     } else if (type === "fast-food" || type === "breakfast" || type === "lunch" || type === "dinner" || type === "snack") {
       setSelectedMealType(type);
       setSelectedTool("meal-builder");
-    } else if (type === "water") {
-      updateHistory("water", 1);
+    } else if (type === "weight") {
+      setShowWeightModal(true);
     } else {
       updateHistory("consumed", calories);
     }
@@ -429,6 +433,10 @@ export default function Home() {
 
         <ProgressDashboard progress={userProgress} />
 
+        <WeightProgress currentWeight={weight} />
+
+        <WeeklyProgressChart history={history} budget={budget} />
+
         <RewardCalendar
           history={history}
           budget={budget}
@@ -555,6 +563,14 @@ export default function Home() {
         achievement={newAchievement}
         onClose={() => setNewAchievement(null)}
       />
+
+      {showWeightModal && (
+        <WeightModal
+          onClose={() => setShowWeightModal(false)}
+          onLogWeight={(w) => setWeight(w)}
+          currentWeight={weight}
+        />
+      )}
 
       <InstallPrompt />
     </main>
