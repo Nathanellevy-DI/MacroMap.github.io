@@ -107,6 +107,18 @@ html {
 html, body {
   max-width: 100vw;
   overflow-x: hidden;
+  /* Prevent pull-to-refresh and bounce/overscroll on mobile */
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  /* Prevent long-press text selection to feel like a native app */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Re-enable text selection on inputs so users can copy/paste what they write */
+input, textarea, select, [contenteditable="true"] {
+  user-select: auto;
+  -webkit-user-select: auto;
 }
 
 body {
