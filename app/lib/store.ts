@@ -58,6 +58,8 @@ export const DEFAULT_PROGRESS: UserProgress = {
   totalDaysLogged: 0,
   lastLogDate: null,
   unlockedAchievements: [],
+  originWeight: null,
+  startDate: null,
 };
 
 // ============================================
@@ -303,27 +305,38 @@ export function getWeightHistory(): WeightEntry[] {
   return read<WeightEntry[]>(WEIGHT_KEY, []);
 }
 
-export function addWeightEntry(weight: number, date?: string): WeightEntry {
+export function addWeightEntry(weight: number, notes?: string, date?: string): WeightEntry {
   const history = getWeightHistory();
+  const entryDate = date || todayKey();
+  
   const entry: WeightEntry = {
-    date: date || todayKey(),
+    id: Date.now().toString(),
+    date: entryDate,
     weight,
     timestamp: Date.now(),
+    notes,
   };
-  const existingIdx = history.findIndex(e => e.date === entry.date);
-  if (existingIdx >= 0) {
-    history[existingIdx] = entry;
-  } else {
-    history.push(entry);
-  }
-  history.sort((a, b) => a.date.localeCompare(b.date));
+  
+  // Append new entry to the logs array (do not update/overwrite past entries)
+  history.push(entry);
+  
+  // Sort by timestamp so the latest entry is always last
+  history.sort((a, b) => a.timestamp - b.timestamp);
   write(WEIGHT_KEY, history);
+
+  // Initialize immutable origin_weight if it is the first entry
+  const progress = getProgress();
+  if (progress.originWeight === null) {
+    progress.originWeight = weight;
+    progress.startDate = entryDate;
+    saveProgress(progress);
+  }
+
   return entry;
 }
 
 export function getStartingWeight(): number | null {
-  const history = getWeightHistory();
-  return history.length > 0 ? history[0].weight : null;
+  return getProgress().originWeight;
 }
 
 export function getCurrentWeight(): number | null {
@@ -331,10 +344,27 @@ export function getCurrentWeight(): number | null {
   return history.length > 0 ? history[history.length - 1].weight : null;
 }
 
-export function getWeightChange(): number | null {
+/** Total Progress: Compares most recent log entry against the immutable origin_weight */
+export function getWeightProgress(): number | null {
+  const current = getCurrentWeight();
+  const origin = getStartingWeight();
+  if (current === null || origin === null) return null;
+  return current - origin;
+}
+
+/** Time Elapsed: Compares latest timestamp against the start_date */
+export function getWeightTimeElapsed(): string {
+  const progress = getProgress();
+  if (!progress.startDate) return "0 days";
+
+  const start = new Date(progress.startDate);
   const history = getWeightHistory();
-  if (history.length < 2) return null;
-  return history[history.length - 1].weight - history[0].weight;
+  const latestTimestamp = history.length > 0 ? history[history.length - 1].timestamp : Date.now();
+  
+  const diffTime = Math.abs(latestTimestamp - start.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+  
+  return `${diffDays} days`;
 }
 
 // ============================================

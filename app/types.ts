@@ -95,11 +95,12 @@ export interface DayLog {
   water: number;
 }
 
-/** A single weight log entry */
 export interface WeightEntry {
+  id: string;
   date: string; // YYYY-MM-DD
   weight: number;
   timestamp: number;
+  notes?: string;
 }
 
 /** User profile and goals */
@@ -111,7 +112,7 @@ export interface UserSettings {
   carbsGoal: number;
   fatGoal: number;
   waterGoal: number;
-  waterUnit: 'glasses' | 'oz' | 'ml';
+  waterUnit: string;
   weightUnit: 'lbs' | 'kg';
   darkMode: boolean;
 }
@@ -126,6 +127,8 @@ export interface UserProgress {
   totalDaysLogged: number;
   lastLogDate: string | null; // YYYY-MM-DD
   unlockedAchievements: string[];
+  originWeight: number | null;
+  startDate: string | null;
 }
 
 export interface Achievement {

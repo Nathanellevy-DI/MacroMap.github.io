@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { UserSettings, WeightEntry } from "../types";
 import {
-  getWeightHistory, addWeightEntry, getStartingWeight, getCurrentWeight, getWeightChange,
+  getWeightHistory, addWeightEntry, getStartingWeight, getCurrentWeight, getWeightProgress, getWeightTimeElapsed,
   exportAllData, importAllData, clearAllData,
 } from "../lib/store";
 import ThemeToggle from "./ThemeToggle";
@@ -16,20 +16,23 @@ interface SettingsProps {
 export default function Settings({ settings, onSave }: SettingsProps) {
   const [localSettings, setLocalSettings] = useState<UserSettings>({ ...settings });
   const [weightInput, setWeightInput] = useState("");
+  const [weightNotes, setWeightNotes] = useState("");
   const [weightHistory, setWeightHistory] = useState<WeightEntry[]>(() => getWeightHistory());
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [importStatus, setImportStatus] = useState<string | null>(null);
 
   const startWeight = getStartingWeight();
   const currentWeight = getCurrentWeight();
-  const weightChange = getWeightChange();
+  const weightChange = getWeightProgress();
+  const timeElapsed = getWeightTimeElapsed();
 
   const handleLogWeight = () => {
     const w = parseFloat(weightInput);
     if (!w || w <= 0) return;
-    addWeightEntry(w);
+    addWeightEntry(w, weightNotes);
     setWeightHistory(getWeightHistory());
     setWeightInput("");
+    setWeightNotes("");
   };
 
   const handleExport = () => {
@@ -139,8 +142,8 @@ export default function Settings({ settings, onSave }: SettingsProps) {
         {currentWeight !== null && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
             <div className="stat-box">
-              <p className="text-heading" style={{ color: "var(--text-primary)", fontWeight: 700 }}>{startWeight}</p>
-              <p className="text-caption" style={{ color: "var(--text-muted)" }}>Start</p>
+              <p className="text-heading" style={{ color: "var(--text-primary)", fontWeight: 700 }}>{startWeight || "—"}</p>
+              <p className="text-caption" style={{ color: "var(--text-muted)" }}>Origin Weight</p>
             </div>
             <div className="stat-box">
               <p className="text-heading" style={{ color: "var(--text-primary)", fontWeight: 700 }}>{currentWeight}</p>
@@ -150,22 +153,35 @@ export default function Settings({ settings, onSave }: SettingsProps) {
               <p className="text-heading" style={{ color: weightChange !== null && weightChange < 0 ? "var(--success)" : weightChange !== null && weightChange > 0 ? "var(--danger)" : "var(--text-primary)", fontWeight: 700 }}>
                 {weightChange !== null ? (weightChange > 0 ? "+" : "") + weightChange.toFixed(1) : "—"}
               </p>
-              <p className="text-caption" style={{ color: "var(--text-muted)" }}>Change</p>
+              <p className="text-caption" style={{ color: "var(--text-muted)" }}>Total Progress</p>
             </div>
           </div>
         )}
+        {startWeight !== null && (
+          <p className="text-small" style={{ color: "var(--text-muted)", textAlign: "center", marginBottom: "var(--space-lg)" }}>
+            Tracking for {timeElapsed}
+          </p>
+        )}
 
         {/* Log Weight */}
-        <div style={{ display: "flex", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
-          <input
-            type="number"
-            value={weightInput}
-            onChange={(e) => setWeightInput(e.target.value)}
-            placeholder={`Weight (${localSettings.weightUnit})`}
-            style={{ flex: 1 }}
-            step="0.1"
-          />
-          <button onClick={handleLogWeight} className="btn btn-primary" disabled={!weightInput}>
+        <div style={{ display: "flex", gap: "var(--space-md)", marginBottom: "var(--space-lg)", alignItems: "flex-start" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
+            <input
+              type="number"
+              value={weightInput}
+              onChange={(e) => setWeightInput(e.target.value)}
+              placeholder={`Weight (${localSettings.weightUnit})`}
+              step="0.1"
+            />
+            <input
+              type="text"
+              value={weightNotes}
+              onChange={(e) => setWeightNotes(e.target.value)}
+              placeholder="Notes (optional)..."
+              style={{ fontSize: "0.875rem", padding: "12px 16px" }}
+            />
+          </div>
+          <button onClick={handleLogWeight} className="btn btn-primary" disabled={!weightInput} style={{ height: "100%", padding: "16px 24px" }}>
             Log
           </button>
         </div>
@@ -195,11 +211,18 @@ export default function Settings({ settings, onSave }: SettingsProps) {
         {weightHistory.length > 0 && (
           <details>
             <summary className="text-caption" style={{ color: "var(--accent)", cursor: "pointer" }}>View history ({weightHistory.length} entries)</summary>
-            <div style={{ marginTop: "var(--space-md)", maxHeight: 200, overflowY: "auto" }}>
+            <div style={{ marginTop: "var(--space-md)", maxHeight: 200, overflowY: "auto", display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
               {[...weightHistory].reverse().map((entry, i) => (
-                <div key={i} className="list-row" style={{ padding: "var(--space-sm) 0" }}>
-                  <span style={{ color: "var(--text-muted)", fontSize: "0.875rem" }}>{entry.date}</span>
-                  <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "0.875rem", marginLeft: "auto" }}>{entry.weight} {localSettings.weightUnit}</span>
+                <div key={entry.id || i} className="glass-card" style={{ padding: "var(--space-md)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ color: "var(--text-muted)", fontSize: "0.8125rem", fontWeight: 600 }}>{entry.date}</span>
+                    <span style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "1rem" }}>{entry.weight} {localSettings.weightUnit}</span>
+                  </div>
+                  {entry.notes && (
+                    <div style={{ marginTop: "var(--space-xs)", color: "var(--text-secondary)", fontSize: "0.875rem" }}>
+                      {entry.notes}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -235,11 +258,13 @@ export default function Settings({ settings, onSave }: SettingsProps) {
         <h3 className="text-small" style={{ color: "var(--text-secondary)", fontWeight: 700, marginBottom: "var(--space-lg)" }}>💧 Water Goal</h3>
         <div style={{ display: "flex", gap: "var(--space-md)" }}>
           <input type="number" value={localSettings.waterGoal} onChange={(e) => update({ waterGoal: parseInt(e.target.value) || 0 })} style={{ flex: 1 }} />
-          <select value={localSettings.waterUnit} onChange={(e) => update({ waterUnit: e.target.value as UserSettings["waterUnit"] })} style={{ width: 130 }}>
-            <option value="glasses">glasses</option>
-            <option value="oz">oz</option>
-            <option value="ml">ml</option>
-          </select>
+          <input 
+            type="text" 
+            value={localSettings.waterUnit} 
+            onChange={(e) => update({ waterUnit: e.target.value })} 
+            placeholder="glasses, ml, L, cups..."
+            style={{ width: 130 }} 
+          />
         </div>
       </div>
 
